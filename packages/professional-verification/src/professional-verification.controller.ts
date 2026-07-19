@@ -1,8 +1,5 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
-import { VerifiedGuard } from '../auth/verified.guard.js';
-import { CurrentUser } from '../auth/current-user.decorator.js';
-import type { AuthenticatedUser } from '../auth/auth.types.js';
+import { JwtAuthGuard, VerifiedGuard, CurrentUser, type AuthenticatedUser } from '@mycota/auth';
 import { ProfessionalVerificationService } from './professional-verification.service.js';
 import { RequestProfessionalVerificationDto } from './dto/request-professional-verification.dto.js';
 import { ConfirmProfessionalVerificationDto } from './dto/confirm-professional-verification.dto.js';

@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { User } from '@btfp/shared-types';
-import { UsersService } from '../auth/users.service.js';
-import { EmailCodeService } from '../auth/email-code.service.js';
+import { UsersService, EmailCodeService } from '@mycota/auth';
 
 interface UserAccountRef {
   provider: string;

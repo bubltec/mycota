@@ -1,0 +1,30 @@
+{
+  "name": "@mycota/professional-verification",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b --noEmit",
+    "lint": "oxlint -c ../../.oxlintrc.json src"
+  },
+  "dependencies": {
+    "@btfp/shared-types": "workspace:*",
+    "@mycota/auth": "workspace:*",
+    "@nestjs/common": "^10.4.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.8.0"
+  }
+}

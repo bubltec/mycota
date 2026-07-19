@@ -9,7 +9,7 @@ import {
   DynamoDBDocumentClient,
 } from '@aws-sdk/lib-dynamodb';
 import type { User } from '@btfp/shared-types';
-import { DYNAMO_DOC_CLIENT } from '../dynamo/dynamo.constants.js';
+import { DYNAMO_DOC_CLIENT } from '@mycota/dynamo';
 import { MYCOTA_AUTH_CONFIG, type MycotaAuthConfig } from './auth.config.js';
 import type { OAuthProfile } from './auth.types.js';
 
