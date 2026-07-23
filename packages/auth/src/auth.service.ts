@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import type { User } from '@btfp/shared-types';
+import type { User } from './user.types.js';
 import type { SessionJwtPayload } from './auth.types.js';
 
 @Injectable()

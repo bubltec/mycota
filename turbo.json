@@ -3,12 +3,15 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**"]
+      "outputs": ["dist/**", "lambda-dist/**"]
     },
     "lint": {
       "dependsOn": ["^build"]
     },
     "typecheck": {
+      "dependsOn": ["^build"]
+    },
+    "test": {
       "dependsOn": ["^build"]
     }
   }

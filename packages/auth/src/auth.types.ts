@@ -1,4 +1,4 @@
-import type { AuthProvider } from '@btfp/shared-types';
+import type { AuthProvider } from './user.types.js';
 
 export interface OAuthProfile {
   provider: AuthProvider;
