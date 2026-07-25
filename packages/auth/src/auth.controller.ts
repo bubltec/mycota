@@ -139,10 +139,7 @@ export class AuthController {
     res.redirect(this.config.webOrigin, 302);
   }
 
-  private async completeOAuthLogin(
-    req: FastifyRequest & { user?: unknown },
-    res: FastifyReply,
-  ) {
+  private async completeOAuthLogin(req: FastifyRequest & { user?: unknown }, res: FastifyReply) {
     const profile = req.user as unknown as OAuthProfile;
     const user = await this.users.upsertFromOAuth(profile);
     this.setSessionCookie(res, this.authService.issueSessionToken(user));

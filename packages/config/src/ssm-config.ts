@@ -76,7 +76,10 @@ export async function loadSsmConfig(options: SsmConfigOptions): Promise<Record<s
   const merged: Record<string, string> = {};
 
   if (options.includeShared ?? true) {
-    Object.assign(merged, toLeafMap(await listParametersUnderPath(client, `/${options.namespace}/shared/`)));
+    Object.assign(
+      merged,
+      toLeafMap(await listParametersUnderPath(client, `/${options.namespace}/shared/`)),
+    );
   }
   Object.assign(
     merged,

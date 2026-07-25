@@ -118,7 +118,14 @@ convention saves you from writing yourself.
 
 ```bash
 pnpm install
-pnpm turbo run typecheck lint build test
+pnpm turbo run typecheck build test
 ```
 
-Runs standalone — no btfp parent checkout needed.
+Runs standalone — no btfp parent checkout needed. Commits use **Lefthook** (`lefthook.yml`) for
+oxlint/oxfmt on staged files (same rules as btfp). CI runs typecheck/build/test only — not
+full-tree lint or format.
+
+When developing alongside [badthingsforpets](https://github.com/GenomeInc/btfp), btfp vendors
+this repo under `vendor/mycota` and links these packages via pnpm workspace. Push changes here
+first, then bump the submodule pointer in btfp — see btfp's
+[contributing guide](https://github.com/GenomeInc/btfp/blob/main/docs/contributing.md#working-on-mycota-submodule-dependency).

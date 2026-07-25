@@ -23,12 +23,18 @@ export async function handler(event: CdkCustomResourceEvent): Promise<CdkCustomR
       sourceEnv: props.SourceEnv,
       targetEnv: props.TargetEnv,
     });
-    return { PhysicalResourceId: physicalResourceId, Data: { ClonedParameterCount: written.length } };
+    return {
+      PhysicalResourceId: physicalResourceId,
+      Data: { ClonedParameterCount: written.length },
+    };
   }
 
   if (event.RequestType === 'Delete') {
     const deleted = await deleteSsmNamespace({ namespace: props.Namespace, env: props.TargetEnv });
-    return { PhysicalResourceId: physicalResourceId, Data: { DeletedParameterCount: deleted.length } };
+    return {
+      PhysicalResourceId: physicalResourceId,
+      Data: { DeletedParameterCount: deleted.length },
+    };
   }
 
   // Update

@@ -65,7 +65,9 @@ describe('JwtAuthGuard', () => {
   });
 
   it('falls back to a default cookie name when config leaves it unset', () => {
-    const auth = { verifySessionToken: vi.fn().mockReturnValue(validPayload) } as unknown as AuthService;
+    const auth = {
+      verifySessionToken: vi.fn().mockReturnValue(validPayload),
+    } as unknown as AuthService;
     const config: MycotaAuthConfig = {
       jwtSecret: 'unused',
       webOrigin: 'http://localhost',

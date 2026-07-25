@@ -11,9 +11,14 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
-    "test": "turbo run test"
+    "test": "turbo run test",
+    "format": "oxfmt '**/*.{ts,tsx,js,mjs}' --ignore-path .gitignore",
+    "format:check": "oxfmt --check '**/*.{ts,tsx,js,mjs}' --ignore-path .gitignore",
+    "prepare": "lefthook install"
   },
   "devDependencies": {
+    "lefthook": "^1.13.6",
+    "oxfmt": "^0.59.0",
     "oxlint": "^1.74.0",
     "turbo": "^2.3.0",
     "typescript": "^5.8.0"

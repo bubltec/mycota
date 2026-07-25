@@ -6,7 +6,12 @@ import {
   PutParameterCommand,
   DeleteParametersCommand,
 } from '@aws-sdk/client-ssm';
-import { loadSsmConfig, pushSsmConfig, cloneSsmNamespace, deleteSsmNamespace } from './ssm-config.js';
+import {
+  loadSsmConfig,
+  pushSsmConfig,
+  cloneSsmNamespace,
+  deleteSsmNamespace,
+} from './ssm-config.js';
 
 const ssmMock = mockClient(SSMClient);
 
@@ -53,7 +58,9 @@ describe('loadSsmConfig', () => {
     const result = await loadSsmConfig({ namespace: 'myapp', env: 'dev', includeShared: false });
 
     expect(result).toEqual({ 'jwt-secret': 'dev-jwt' });
-    expect(ssmMock.commandCalls(GetParametersByPathCommand, { Path: '/myapp/shared/' })).toHaveLength(0);
+    expect(
+      ssmMock.commandCalls(GetParametersByPathCommand, { Path: '/myapp/shared/' }),
+    ).toHaveLength(0);
   });
 
   it('follows NextToken pagination', async () => {
@@ -95,17 +102,19 @@ describe('pushSsmConfig', () => {
 
 describe('cloneSsmNamespace', () => {
   it('copies every source-env parameter to the target env', async () => {
-    ssmMock
-      .on(GetParametersByPathCommand, { Path: '/myapp/dev/', Recursive: true })
-      .resolves({
-        Parameters: [
-          { Name: '/myapp/dev/jwt-secret', Value: 'dev-jwt' },
-          { Name: '/myapp/dev/basic-auth-user', Value: 'admin' },
-        ],
-      });
+    ssmMock.on(GetParametersByPathCommand, { Path: '/myapp/dev/', Recursive: true }).resolves({
+      Parameters: [
+        { Name: '/myapp/dev/jwt-secret', Value: 'dev-jwt' },
+        { Name: '/myapp/dev/basic-auth-user', Value: 'admin' },
+      ],
+    });
     ssmMock.on(PutParameterCommand).resolves({});
 
-    const written = await cloneSsmNamespace({ namespace: 'myapp', sourceEnv: 'dev', targetEnv: 'pr-123' });
+    const written = await cloneSsmNamespace({
+      namespace: 'myapp',
+      sourceEnv: 'dev',
+      targetEnv: 'pr-123',
+    });
 
     expect(written.sort()).toEqual(
       ['/myapp/pr-123/jwt-secret', '/myapp/pr-123/basic-auth-user'].sort(),

@@ -7,7 +7,9 @@ import { grantSsmConfigRead } from './grant-ssm-config-read.js';
 function synthWithGrant(options: Parameters<typeof grantSsmConfigRead>[1]) {
   const app = new App();
   const stack = new Stack(app, 'TestStack');
-  const role = new Role(stack, 'TestRole', { assumedBy: new ServicePrincipal('lambda.amazonaws.com') });
+  const role = new Role(stack, 'TestRole', {
+    assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
+  });
   grantSsmConfigRead(role, options);
   return Template.fromStack(stack);
 }

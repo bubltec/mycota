@@ -33,7 +33,11 @@ describe('EphemeralConfig (synth)', () => {
     const app = new App();
     const stack = new Stack(app, 'TestStack');
 
-    new EphemeralConfig(stack, 'Config', { namespace: 'myapp', sourceEnv: 'dev', targetEnv: 'pr-123' });
+    new EphemeralConfig(stack, 'Config', {
+      namespace: 'myapp',
+      sourceEnv: 'dev',
+      targetEnv: 'pr-123',
+    });
 
     Template.fromStack(stack).hasResourceProperties('AWS::IAM::Policy', {
       PolicyDocument: {

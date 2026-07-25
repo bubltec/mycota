@@ -1,4 +1,4 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "ignorePatterns": ["**/dist/**", "**/.turbo/**", "**/node_modules/**"]
+  "ignorePatterns": ["**/dist/**", "**/lambda-dist/**", "**/.turbo/**", "**/node_modules/**"]
 }

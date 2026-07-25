@@ -1,5 +1,10 @@
 #!/usr/bin/env node
-import { loadSsmConfig, pushSsmConfig, cloneSsmNamespace, deleteSsmNamespace } from './ssm-config.js';
+import {
+  loadSsmConfig,
+  pushSsmConfig,
+  cloneSsmNamespace,
+  deleteSsmNamespace,
+} from './ssm-config.js';
 
 const USAGE = `Usage:
   mycota-config load   --namespace <ns> --env <env> [--region <region>]
@@ -51,7 +56,9 @@ async function main(): Promise<void> {
         { namespace: requireArg(args, 'namespace'), env: requireArg(args, 'env') },
         { [requireArg(args, 'key')]: requireArg(args, 'value') },
       );
-      console.error(written.length ? `Wrote: ${written.join(', ')}` : 'Nothing written (empty value).');
+      console.error(
+        written.length ? `Wrote: ${written.join(', ')}` : 'Nothing written (empty value).',
+      );
       break;
     }
     case 'clone': {

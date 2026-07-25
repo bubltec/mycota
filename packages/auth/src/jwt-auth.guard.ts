@@ -1,4 +1,10 @@
-import { CanActivate, ExecutionContext, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import type { FastifyRequest } from 'fastify';
 import { AuthService } from './auth.service.js';
 import { MYCOTA_AUTH_CONFIG, type MycotaAuthConfig } from './auth.config.js';
