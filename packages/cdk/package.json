@@ -14,7 +14,6 @@
   "scripts": {
     "build": "tsc -b && node scripts/build-lambda.mjs",
     "typecheck": "tsc -b --noEmit",
-    "lint": "oxlint -c ../../.oxlintrc.json src",
     "pretest": "pnpm run build",
     "test": "vitest run"
   },

@@ -9,7 +9,7 @@
   "packageManager": "pnpm@11.13.0",
   "scripts": {
     "build": "turbo run build",
-    "lint": "turbo run lint",
+    "lint": "oxlint -c .oxlintrc.json packages",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "format": "oxfmt '**/*.{ts,tsx,js,mjs}' --ignore-path .gitignore",
