@@ -29,10 +29,10 @@ importers:
       '@aws-sdk/lib-dynamodb':
         specifier: ^3.716.0
         version: 3.1092.0(@aws-sdk/client-dynamodb@3.1092.0)
-      '@mycota/config':
+      '@bubltec/mycota-config':
         specifier: workspace:*
         version: link:../config
-      '@mycota/dynamo':
+      '@bubltec/mycota-dynamo':
         specifier: workspace:*
         version: link:../dynamo
       '@nestjs/common':
@@ -93,7 +93,7 @@ importers:
 
   packages/cdk:
     dependencies:
-      '@mycota/config':
+      '@bubltec/mycota-config':
         specifier: workspace:*
         version: link:../config
     devDependencies:
@@ -162,7 +162,7 @@ importers:
 
   packages/professional-verification:
     dependencies:
-      '@mycota/auth':
+      '@bubltec/mycota-auth':
         specifier: workspace:*
         version: link:../auth
       '@nestjs/common':

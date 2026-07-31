@@ -8,7 +8,7 @@ import {
   UpdateCommand,
   DynamoDBDocumentClient,
 } from '@aws-sdk/lib-dynamodb';
-import { DYNAMO_DOC_CLIENT } from '@mycota/dynamo';
+import { DYNAMO_DOC_CLIENT } from '@bubltec/mycota-dynamo';
 import type { User } from './user.types.js';
 import { MYCOTA_AUTH_CONFIG, type MycotaAuthConfig } from './auth.config.js';
 import type { OAuthProfile } from './auth.types.js';

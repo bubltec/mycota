@@ -1,18 +1,18 @@
 # mycota
 
-Reusable NestJS core, extracted from [badthingsforpets.com](https://github.com/GenomeInc/btfp): auth (GitHub/Google OAuth + standalone work-email sign-in), organizational-email professional verification, a DynamoDB client module, and SSM-backed configuration management. No `process.env` reads inside `@mycota/auth` or `@mycota/config` — everything is passed in explicitly, so a consuming app supplies its own secrets/table names/callback URLs instead of inheriting anyone else's.
+Reusable NestJS core, extracted from [badthingsforpets.com](https://github.com/bubltec/btfp): auth (GitHub/Google OAuth + standalone work-email sign-in), organizational-email professional verification, a DynamoDB client module, and SSM-backed configuration management. No `process.env` reads inside `@bubltec/mycota-auth` or `@bubltec/mycota-config` — everything is passed in explicitly, so a consuming app supplies its own secrets/table names/callback URLs instead of inheriting anyone else's.
 
 A pnpm + turbo monorepo (same shape as btfp itself), so each concern is its own versionable package instead of one flat bundle — a project that only wants `dynamo` isn't forced to pull in passport/bedrock/ses too, and there's room to add more packages as the framework's reach grows.
 
 ## Packages
 
-- **`packages/dynamo`** → `@mycota/dynamo` — `DynamoModule` (global, points at DynamoDB Local when `DYNAMODB_ENDPOINT` is set), `DYNAMO_DOC_CLIENT`, `stripDynamoKeys`. No internal dependencies.
-- **`packages/config`** → `@mycota/config` — SSM Parameter Store-backed configuration, namespaced by app and environment. No internal dependencies. See below.
-- **`packages/auth`** → `@mycota/auth` — `MycotaAuthModule.forRootAsync({ useFactory })`, `JwtAuthGuard`, `VerifiedGuard`, `CurrentUser`, `UsersService`, `EmailCodeService`, plus the SSM convenience `buildMycotaAuthConfigFromSsm`. Depends on `@mycota/dynamo` and `@mycota/config`.
-- **`packages/professional-verification`** → `@mycota/professional-verification` — request/confirm/review workflow for "prove you belong to an organization," built on `@mycota/auth`'s email-code flow. Depends on `@mycota/auth`.
-- **`packages/cdk`** → `@mycota/cdk` — CDK constructs for the config story above: `grantSsmConfigRead` and the `EphemeralConfig` construct. Depends on `@mycota/config`; `aws-cdk-lib`/`constructs` are peer dependencies (bring your own pinned CDK version). See below.
+- **`packages/dynamo`** → `@bubltec/mycota-dynamo` — `DynamoModule` (global, points at DynamoDB Local when `DYNAMODB_ENDPOINT` is set), `DYNAMO_DOC_CLIENT`, `stripDynamoKeys`. No internal dependencies.
+- **`packages/config`** → `@bubltec/mycota-config` — SSM Parameter Store-backed configuration, namespaced by app and environment. No internal dependencies. See below.
+- **`packages/auth`** → `@bubltec/mycota-auth` — `MycotaAuthModule.forRootAsync({ useFactory })`, `JwtAuthGuard`, `VerifiedGuard`, `CurrentUser`, `UsersService`, `EmailCodeService`, plus the SSM convenience `buildMycotaAuthConfigFromSsm`. Depends on `@bubltec/mycota-dynamo` and `@bubltec/mycota-config`.
+- **`packages/professional-verification`** → `@bubltec/mycota-professional-verification` — request/confirm/review workflow for "prove you belong to an organization," built on `@bubltec/mycota-auth`'s email-code flow. Depends on `@bubltec/mycota-auth`.
+- **`packages/cdk`** → `@bubltec/mycota-cdk` — CDK constructs for the config story above: `grantSsmConfigRead` and the `EphemeralConfig` construct. Depends on `@bubltec/mycota-config`; `aws-cdk-lib`/`constructs` are peer dependencies (bring your own pinned CDK version). See below.
 
-## Configuration management (`@mycota/config`)
+## Configuration management (`@bubltec/mycota-config`)
 
 The core idea: real config lives in SSM Parameter Store under
 `/{namespace}/{env}/{key}` (plus `/{namespace}/shared/{key}` for values every
@@ -21,7 +21,7 @@ environment shares), where **`env` is any string, not a fixed `'dev' |
 ephemeral preview stack, works with zero code changes.
 
 ```ts
-import { loadSsmConfig, pushSsmConfig, cloneSsmNamespace, deleteSsmNamespace } from '@mycota/config';
+import { loadSsmConfig, pushSsmConfig, cloneSsmNamespace, deleteSsmNamespace } from '@bubltec/mycota-config';
 
 // Fetch everything under /myapp/dev/* + /myapp/shared/*, decrypted, keyed
 // by leaf parameter name. Returns {} for an unprovisioned env — never
@@ -46,7 +46,7 @@ functions above. A project's own `infra/scripts/secrets.ts`-equivalent
 becomes a thin wrapper around this instead of a from-scratch
 implementation.
 
-`@mycota/auth` builds on this with `buildMycotaAuthConfigFromSsm({
+`@bubltec/mycota-auth` builds on this with `buildMycotaAuthConfigFromSsm({
 namespace, env, overrides? })`, which maps a documented SSM key convention
 (`jwt-secret`, `web-origin`, `users-table-name`, `email-from-address`,
 `session-cookie-name`, `stage`, `aws-region`, `bedrock-inference-profile-id`,
@@ -64,19 +64,19 @@ MycotaAuthModule.forRootAsync({
 primitives above are exactly what a PR-preview or throwaway test
 environment needs: clone a template environment's config on creation, load
 it at runtime (gracefully degraded if it hasn't been cloned yet), delete it
-on teardown. `@mycota/cdk` (below) closes the loop at the infra layer too —
+on teardown. `@bubltec/mycota-cdk` (below) closes the loop at the infra layer too —
 an actual construct that calls these primitives from a Lambda-backed
 CloudFormation custom resource, so an ephemeral stack's own CDK app can
 provision and tear down its config without any project-specific glue code.
 
-## CDK constructs (`@mycota/cdk`)
+## CDK constructs (`@bubltec/mycota-cdk`)
 
 mycota is opinionated about CDK as its IaC layer — same TypeScript-first
 reasoning as the rest of the framework, no context-switch to a separate
 templating language, and it's what btfp itself already deploys with.
 
 ```ts
-import { grantSsmConfigRead, EphemeralConfig } from '@mycota/cdk';
+import { grantSsmConfigRead, EphemeralConfig } from '@bubltec/mycota-cdk';
 
 // Generalized version of a single ssm.StringParameter...grantRead(handler)
 // call — scope a Lambda/ECS role to read everything under a namespace/env
@@ -101,13 +101,36 @@ own copy.
 
 ## Status
 
-Consumed as a git submodule inside btfp's pnpm workspace (`vendor/mycota`,
-with btfp's own `pnpm-workspace.yaml` reaching into
-`vendor/mycota/packages/*`) — not yet published or used by a second
-project. Genuinely standalone-installable now, though: no package here
-depends on anything outside this repo (the `@btfp/shared-types` coupling
-this README used to flag has been removed — `User`/`AuthProvider` are
-defined locally in `@mycota/auth` now).
+Published to the public npm registry under the `@bubltec` scope:
+`@bubltec/mycota-config`, `@bubltec/mycota-dynamo`, `@bubltec/mycota-auth`,
+`@bubltec/mycota-professional-verification`, `@bubltec/mycota-cdk`. All five
+version in lockstep and are published automatically by CI on every push to
+`main` that touches `packages/**`, tagged `dev` (e.g. `0.1.0-dev.42`) —
+`latest` is reserved for an eventual stable release.
+
+Install whichever packages you need:
+
+```bash
+pnpm add @bubltec/mycota-auth@dev @bubltec/mycota-config@dev @bubltec/mycota-dynamo@dev
+```
+
+Because `@bubltec/mycota-auth`'s internal deps (`@bubltec/mycota-config`,
+`@bubltec/mycota-dynamo`) are ordinary published dependencies, installing
+`@bubltec/mycota-auth` alone pulls them in transitively — no workspace
+linking, no submodule, no manual build step required.
+
+To pick up a newer dev build later, re-run `pnpm add <pkg>@dev` — npm/pnpm
+dependency versions are pinned at install time, not auto-updating, so this
+is a deliberate "pull latest" action, not a persistent floating reference.
+
+No package here depends on anything outside this repo (the
+`@btfp/shared-types` coupling this README used to flag has been removed —
+`User`/`AuthProvider` are defined locally in `@bubltec/mycota-auth` now).
+
+For a fast local edit-and-test loop against a consuming project without
+waiting for a dev publish: `pnpm link --global` from each package directory
+here, then `pnpm link --global @bubltec/mycota-auth` (etc.) in the
+consuming project.
 
 See `apps/bff/src/mycota-config.ts` in the btfp repo for a real (pre-SSM,
 env-var-based) example of building `MycotaAuthConfig` by hand — worth

@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
-import { JwtAuthGuard, VerifiedGuard, CurrentUser, type AuthenticatedUser } from '@mycota/auth';
+import { JwtAuthGuard, VerifiedGuard, CurrentUser, type AuthenticatedUser } from '@bubltec/mycota-auth';
 import { ProfessionalVerificationService } from './professional-verification.service.js';
 import { RequestProfessionalVerificationDto } from './dto/request-professional-verification.dto.js';
 import { ConfirmProfessionalVerificationDto } from './dto/confirm-professional-verification.dto.js';

@@ -1,5 +1,5 @@
 import type { CdkCustomResourceEvent, CdkCustomResourceResponse } from 'aws-lambda';
-import { cloneSsmNamespace, deleteSsmNamespace } from '@mycota/config';
+import { cloneSsmNamespace, deleteSsmNamespace } from '@bubltec/mycota-config';
 
 interface EphemeralConfigResourceProperties {
   Namespace: string;
