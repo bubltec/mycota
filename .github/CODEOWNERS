@@ -1,0 +1,5 @@
+# Required for the "main-merge" branch ruleset's require_code_owner_review
+# to actually mean something — without this file, GitHub has no code owner
+# to check approvals against, so "require code owner review" silently
+# falls back to accepting any collaborator's approval.
+* @bubltec/developers
