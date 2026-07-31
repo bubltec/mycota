@@ -1,6 +1,7 @@
 {
   "name": "@bubltec/mycota-cdk",
   "version": "0.0.0",
+  "description": "CDK constructs for mycota's SSM-backed config story: grantSsmConfigRead and the EphemeralConfig ephemeral-stack construct.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
