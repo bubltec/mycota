@@ -104,14 +104,32 @@ own copy.
 Published to the public npm registry under the `@bubltec` scope:
 `@bubltec/mycota-config`, `@bubltec/mycota-dynamo`, `@bubltec/mycota-auth`,
 `@bubltec/mycota-professional-verification`, `@bubltec/mycota-cdk`. All five
-version in lockstep and are published automatically by CI on every push to
-`main` that touches `packages/**`, tagged `dev` (e.g. `0.1.0-dev.42`) —
-`latest` is reserved for an eventual stable release.
+version in lockstep. The checked-in `version` field in each package.json is
+a permanent placeholder (`0.0.0`) — it's never authoritative; CI computes
+the real version fresh at publish time from git tags.
+
+Two release paths, both driven by CI on every relevant push to `main`
+(`.github/workflows/ci.yml`):
+
+- **Real release** — if the triggering commit's message contains
+  `#major`, `#minor`, or `#patch` (put the marker in the **PR title**,
+  since that's what a squash-merge commit's subject becomes verbatim),
+  CI bumps the version accordingly from the latest `vX.Y.Z` git tag,
+  publishes under the `latest` dist-tag, pushes the new tag, and creates a
+  GitHub Release.
+- **Rolling prerelease** — every other relevant push publishes under the
+  `next` dist-tag, versioned as the latest real tag's patch+1 plus a
+  `-next.<run-number>` suffix (e.g. `1.2.1-next.43`). No git tag, no
+  GitHub Release — purely ephemeral, same as before.
+
+A push does one or the other, never both.
 
 Install whichever packages you need:
 
 ```bash
-pnpm add @bubltec/mycota-auth@dev @bubltec/mycota-config@dev @bubltec/mycota-dynamo@dev
+pnpm add @bubltec/mycota-auth @bubltec/mycota-config @bubltec/mycota-dynamo
+# or, to track the rolling prerelease instead of the latest real release:
+pnpm add @bubltec/mycota-auth@next @bubltec/mycota-config@next @bubltec/mycota-dynamo@next
 ```
 
 Because `@bubltec/mycota-auth`'s internal deps (`@bubltec/mycota-config`,
@@ -119,9 +137,10 @@ Because `@bubltec/mycota-auth`'s internal deps (`@bubltec/mycota-config`,
 `@bubltec/mycota-auth` alone pulls them in transitively — no workspace
 linking, no submodule, no manual build step required.
 
-To pick up a newer dev build later, re-run `pnpm add <pkg>@dev` — npm/pnpm
-dependency versions are pinned at install time, not auto-updating, so this
-is a deliberate "pull latest" action, not a persistent floating reference.
+To pick up a newer build later, re-run `pnpm add <pkg>` (or `<pkg>@next`)
+— npm/pnpm dependency versions are pinned at install time, not
+auto-updating, so this is a deliberate "pull latest" action, not a
+persistent floating reference.
 
 No package here depends on anything outside this repo (the
 `@btfp/shared-types` coupling this README used to flag has been removed —
