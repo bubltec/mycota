@@ -19,7 +19,7 @@ export interface EphemeralConfigProps {
 
 /**
  * Bootstraps an ephemeral stack's SSM config on creation by cloning it from
- * a template environment (`@mycota/config`'s `cloneSsmNamespace`), and
+ * a template environment (`@bubltec/mycota-config`'s `cloneSsmNamespace`), and
  * tears it down (`deleteSsmNamespace`) when the stack is destroyed —
  * closing the ephemeral-stack loop at the infra layer, not just the
  * runtime layer.
