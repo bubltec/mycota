@@ -1,10 +1,15 @@
 {
-  "name": "@mycota/professional-verification",
-  "private": true,
-  "version": "0.0.0",
+  "name": "@bubltec/mycota-professional-verification",
+  "version": "0.1.0-dev.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -17,7 +22,7 @@
     "lint": "oxlint -c ../../.oxlintrc.json src"
   },
   "dependencies": {
-    "@mycota/auth": "workspace:*",
+    "@bubltec/mycota-auth": "workspace:*",
     "@nestjs/common": "^10.4.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1"

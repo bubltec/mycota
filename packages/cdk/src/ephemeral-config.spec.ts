@@ -54,7 +54,7 @@ describe('EphemeralConfig handler logic', () => {
     deleteSsmNamespace: vi.fn().mockResolvedValue(['/myapp/pr-123/jwt-secret']),
   }));
 
-  vi.mock('@mycota/config', () => ({ cloneSsmNamespace, deleteSsmNamespace }));
+  vi.mock('@bubltec/mycota-config', () => ({ cloneSsmNamespace, deleteSsmNamespace }));
 
   const resourceProperties = { Namespace: 'myapp', SourceEnv: 'dev', TargetEnv: 'pr-123' };
 

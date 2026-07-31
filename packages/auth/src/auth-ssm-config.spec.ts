@@ -4,7 +4,7 @@ const { loadSsmConfig } = vi.hoisted(() => ({
   loadSsmConfig: vi.fn(),
 }));
 
-vi.mock('@mycota/config', () => ({ loadSsmConfig }));
+vi.mock('@bubltec/mycota-config', () => ({ loadSsmConfig }));
 
 describe('buildMycotaAuthConfigFromSsm', () => {
   it('maps the documented SSM key convention onto MycotaAuthConfig', async () => {

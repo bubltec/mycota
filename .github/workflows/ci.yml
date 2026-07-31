@@ -5,6 +5,12 @@ on:
     branches: [main]
   push:
     branches: [main]
+    paths:
+      - 'packages/**'
+      - 'turbo.json'
+      - 'tsconfig.base.json'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/ci.yml'
 
 jobs:
   check:
@@ -22,3 +28,34 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - run: pnpm turbo run typecheck lint build test
+
+  # Publishes every package under `dev`, not `latest` — `latest` is
+  # reserved for a real stable release, done manually/deliberately, never
+  # by this automated job. The dev version bump here is intentionally
+  # never committed back to main (--no-git-checks) — the version history
+  # lives in npm's own registry plus the triggering commit SHA in this
+  # Action run, not as a repo commit.
+  publish:
+    needs: check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: 'https://registry.npmjs.org'
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm turbo run build
+
+      - run: pnpm -r exec -- npm pkg set version="0.1.0-dev.${{ github.run_number }}"
+
+      - run: pnpm -r publish --tag dev --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

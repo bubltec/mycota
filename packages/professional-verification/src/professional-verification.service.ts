@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { UsersService, EmailCodeService, type User } from '@mycota/auth';
+import { UsersService, EmailCodeService, type User } from '@bubltec/mycota-auth';
 
 interface UserAccountRef {
   provider: string;

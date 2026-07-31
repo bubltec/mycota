@@ -3,3 +3,5 @@ packages:
 allowBuilds:
   '@nestjs/core': true
   esbuild: true
+  '@bubltec/mycota-config': true
+  '@bubltec/mycota-cdk': true

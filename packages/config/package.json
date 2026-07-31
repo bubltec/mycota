@@ -1,10 +1,15 @@
 {
-  "name": "@mycota/config",
-  "private": true,
-  "version": "0.0.0",
+  "name": "@bubltec/mycota-config",
+  "version": "0.1.0-dev.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist"
+  ],
   "bin": {
     "mycota-config": "./dist/cli.js"
   },
@@ -16,6 +21,7 @@
   },
   "scripts": {
     "build": "tsc -b",
+    "prepare": "pnpm run build",
     "typecheck": "tsc -b --noEmit",
     "lint": "oxlint -c ../../.oxlintrc.json src",
     "test": "vitest run"

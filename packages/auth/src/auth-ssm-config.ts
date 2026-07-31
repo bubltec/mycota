@@ -1,4 +1,4 @@
-import { loadSsmConfig } from '@mycota/config';
+import { loadSsmConfig } from '@bubltec/mycota-config';
 import type { MycotaAuthConfig } from './auth.config.js';
 
 export interface BuildMycotaAuthConfigFromSsmOptions {

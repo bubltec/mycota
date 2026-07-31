@@ -1,10 +1,16 @@
 {
-  "name": "@mycota/cdk",
-  "private": true,
-  "version": "0.0.0",
+  "name": "@bubltec/mycota-cdk",
+  "version": "0.1.0-dev.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "lambda-dist"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -13,6 +19,7 @@
   },
   "scripts": {
     "build": "tsc -b && node scripts/build-lambda.mjs",
+    "prepare": "pnpm run build",
     "typecheck": "tsc -b --noEmit",
     "lint": "oxlint -c ../../.oxlintrc.json src",
     "pretest": "pnpm run build",
@@ -23,7 +30,7 @@
     "constructs": "^10.4.0"
   },
   "dependencies": {
-    "@mycota/config": "workspace:*"
+    "@bubltec/mycota-config": "workspace:*"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.146",
