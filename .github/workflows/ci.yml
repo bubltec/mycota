@@ -29,18 +29,28 @@ jobs:
 
       - run: pnpm turbo run typecheck lint build test
 
-  # Publishes every package under `dev`, not `latest` — `latest` is
-  # reserved for a real stable release, done manually/deliberately, never
-  # by this automated job. The dev version bump here is intentionally
-  # never committed back to main (--no-git-checks) — the version history
-  # lives in npm's own registry plus the triggering commit SHA in this
-  # Action run, not as a repo commit.
+  # Two release paths, both driven off the latest git tag (not a committed
+  # package.json version — package.json's checked-in version is a
+  # permanent placeholder, see README). Every relevant push either:
+  #  - cuts a real release to `latest` + a `vX.Y.Z` git tag, if the
+  #    triggering commit's message contains #major/#minor/#patch (put the
+  #    marker in the PR title — that's what becomes the squash-merge
+  #    commit subject verbatim); or
+  #  - otherwise publishes a rolling prerelease to `next`, versioned off
+  #    the latest real tag's patch+1.
+  # A push does one or the other, never both. The `main-merge` ruleset only
+  # targets the branch ref, not tags, so pushing a release tag here needs
+  # no branch-protection bypass — just `contents: write` on this job.
   publish:
     needs: check
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
 
@@ -54,8 +64,50 @@ jobs:
 
       - run: pnpm turbo run build
 
-      - run: pnpm -r exec -- npm pkg set version="0.1.0-dev.${{ github.run_number }}"
+      - name: Determine version
+        id: version
+        run: |
+          LATEST_TAG=$(git tag -l 'v*' --sort=-v:refname | head -1)
+          LATEST_TAG=${LATEST_TAG:-v0.0.0}
+          LATEST=${LATEST_TAG#v}
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$LATEST"
 
-      - run: pnpm -r publish --tag dev --no-git-checks
+          MSG=$(git log -1 --format=%B)
+          if echo "$MSG" | grep -qw '#major'; then
+            BUMP=major
+          elif echo "$MSG" | grep -qw '#minor'; then
+            BUMP=minor
+          elif echo "$MSG" | grep -qw '#patch'; then
+            BUMP=patch
+          else
+            BUMP=none
+          fi
+
+          if [ "$BUMP" = major ]; then
+            NEW_VERSION="$((MAJOR + 1)).0.0"; TAG=latest
+          elif [ "$BUMP" = minor ]; then
+            NEW_VERSION="$MAJOR.$((MINOR + 1)).0"; TAG=latest
+          elif [ "$BUMP" = patch ]; then
+            NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"; TAG=latest
+          else
+            NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))-next.${{ github.run_number }}"; TAG=next
+          fi
+
+          echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "bump=$BUMP" >> "$GITHUB_OUTPUT"
+
+      - run: pnpm -r exec -- npm pkg set version="${{ steps.version.outputs.version }}"
+
+      - run: pnpm -r publish --tag ${{ steps.version.outputs.tag }} --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Tag + GitHub Release (real releases only)
+        if: steps.version.outputs.bump != 'none'
+        run: |
+          git tag "v${{ steps.version.outputs.version }}"
+          git push origin "v${{ steps.version.outputs.version }}"
+          gh release create "v${{ steps.version.outputs.version }}" --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}
