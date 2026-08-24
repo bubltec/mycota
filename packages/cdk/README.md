@@ -1,8 +1,8 @@
 # @bubltec/mycota-cdk
 
 CDK constructs for mycota: SSM config grants and ephemeral bootstrap, plus
-a private `MediaBucket` (S3 + CloudFront OAC) and a `JobQueue` (SQS + DLQ +
-EventBridge Scheduler group).
+a private `MediaBucket` (S3 + CloudFront OAC), a `JobQueue` (SQS + DLQ +
+EventBridge Scheduler group), and a `PostgresInstance` (RDS Postgres 16).
 
 `aws-cdk-lib`/`constructs` are **peer dependencies**, not bundled — bring
 your own pinned CDK version. Installing this package doesn't pull in a
@@ -100,6 +100,20 @@ import { JobQueue } from '@bubltec/mycota-cdk';
 const jobs = new JobQueue(this, 'Jobs', { namespace: 'myapp', env: 'dev' });
 jobs.grantSchedule(myApi);
 jobs.grantConsume(myWorker);
+```
+
+## `PostgresInstance` construct
+
+RDS Postgres 16 in private subnets. The consuming app supplies the `IVpc`.
+pgvector is enabled by `@bubltec/mycota-postgres` `VECTOR_EXTENSION` at
+migrate time, not by this construct. Local boot is Docker.
+
+```ts
+import { PostgresInstance } from '@bubltec/mycota-cdk';
+
+const db = new PostgresInstance(this, 'Db', { namespace: 'myapp', env: 'dev', vpc });
+db.allowDefaultPortFrom(myApi);
+db.grantSecretRead(myApi);
 ```
 
 ## Testing this package locally
