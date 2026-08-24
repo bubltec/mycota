@@ -77,4 +77,20 @@ describe('StripePaymentGateway', () => {
       metadata: { orderId: 'ord_1' },
     });
   });
+
+  it('refunds the application fee by default', async () => {
+    const client = stubClient();
+    const gateway = new StripePaymentGateway(client, {
+      secretKey: 'sk_test',
+      webhookSecret: 'whsec_test',
+    });
+    await gateway.refund({ paymentId: 'pi_test_1' });
+    expect(client.refunds.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        payment_intent: 'pi_test_1',
+        refund_application_fee: true,
+        reverse_transfer: true,
+      }),
+    );
+  });
 });

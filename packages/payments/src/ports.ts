@@ -27,6 +27,10 @@ export interface RefundInput {
   paymentId: string;
   amount?: Money;
   reason?: string;
+  /** Reverse the platform take. Default true — Eventbrite keeping the service fee is the behavior not to copy. */
+  reverseApplicationFee?: boolean;
+  /** Pull funds back from the connected account on a destination charge. */
+  reverseTransfer?: boolean;
 }
 
 export interface RefundResult {

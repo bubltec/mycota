@@ -10,9 +10,12 @@ A pnpm + turbo monorepo (same shape as btfp itself), so each concern is its own 
 - **`packages/config`** → `@bubltec/mycota-config` — SSM Parameter Store-backed configuration, namespaced by app and environment. No internal dependencies. See below.
 - **`packages/auth`** → `@bubltec/mycota-auth` — `MycotaAuthModule.forRootAsync({ useFactory })`, `JwtAuthGuard`, `VerifiedGuard`, `CurrentUser`, `UsersService`, `EmailCodeService`, plus the SSM convenience `buildMycotaAuthConfigFromSsm`. Depends on `@bubltec/mycota-dynamo` and `@bubltec/mycota-config`.
 - **`packages/professional-verification`** → `@bubltec/mycota-professional-verification` — request/confirm/review workflow for "prove you belong to an organization," built on `@bubltec/mycota-auth`'s email-code flow. Depends on `@bubltec/mycota-auth`.
-- **`packages/cdk`** → `@bubltec/mycota-cdk` — CDK constructs for the config story above: `grantSsmConfigRead` and the `EphemeralConfig` construct. Depends on `@bubltec/mycota-config`; `aws-cdk-lib`/`constructs` are peer dependencies (bring your own pinned CDK version). See below.
-- **`packages/payments`** → `@bubltec/mycota-payments` — `PaymentGateway` port, `FakePaymentGateway` for local/tests, and a `StripePaymentGateway` that destination-charges Stripe Connect accounts. No Nest, no `stripe` SDK dependency — the consuming app passes a Stripe-shaped client in. Swap Stripe for Adyen/Square later by implementing the same port.
+- **`packages/cdk`** → `@bubltec/mycota-cdk` — CDK constructs: `grantSsmConfigRead`, `EphemeralConfig`, `MediaBucket` (private S3 + CloudFront OAC), and `JobQueue` (SQS + DLQ + EventBridge Scheduler group). Depends on `@bubltec/mycota-config`; `aws-cdk-lib`/`constructs` are peer dependencies (bring your own pinned CDK version). See below.
+- **`packages/payments`** → `@bubltec/mycota-payments` — `PaymentGateway` port, `FakePaymentGateway` for local/tests, and a `StripePaymentGateway` that destination-charges Stripe Connect accounts. `ConnectOnboarding` + `FakeConnectOnboarding` / `StripeConnectOnboarding` for Express account KYC (refresh/return URLs). Refunds reverse the application fee by default. No Nest, no `stripe` SDK dependency — the consuming app passes a Stripe-shaped client in.
 - **`packages/social`** → `@bubltec/mycota-social` — `SocialPublisher` port, a capability map that is honest about what each official API can actually do (TikTok is draft-only until partnership approval; Instagram Stories are not claimed), a `SocialPublisherRegistry` for fan-out, plus Meta / TikTok / X adapters over injected `fetch`.
+- **`packages/media`** → `@bubltec/mycota-media` — `MediaStore` port, `FakeMediaStore` for local/tests, `S3MediaStore` over an injected object-store client. Public objects use a CDN/base URL; private objects use signed GET. No AWS SDK dependency.
+- **`packages/jobs`** → `@bubltec/mycota-jobs` — `JobScheduler` port for delayed work (campaign beats days out). `FakeJobScheduler.processDue` locally; `EventBridgeJobScheduler` uses Scheduler `at()` in production — SQS delay is 15 minutes and is the wrong primitive.
+- **`packages/tokens`** → `@bubltec/mycota-tokens` — `TokenVault` for OAuth access/refresh tokens. Refreshes before expiry, marks `needs_reauth` when refresh fails. `EncryptedTokenStore` + `AesGcmSecretBox` at rest. Meta / TikTok / X refreshers over injected `fetch`. Generic `provider` string — not coupled to `@bubltec/mycota-social`.
 
 ## Configuration management (`@bubltec/mycota-config`)
 
@@ -78,7 +81,7 @@ reasoning as the rest of the framework, no context-switch to a separate
 templating language, and it's what btfp itself already deploys with.
 
 ```ts
-import { grantSsmConfigRead, EphemeralConfig } from '@bubltec/mycota-cdk';
+import { grantSsmConfigRead, EphemeralConfig, MediaBucket, JobQueue } from '@bubltec/mycota-cdk';
 
 // Generalized version of a single ssm.StringParameter...grantRead(handler)
 // call — scope a Lambda/ECS role to read everything under a namespace/env
@@ -94,6 +97,16 @@ new EphemeralConfig(this, 'Config', {
   sourceEnv: 'dev',
   targetEnv: 'pr-123',
 });
+
+// Private S3 + CloudFront OAC for posters / Reels / print PDFs.
+const media = new MediaBucket(this, 'Media', { namespace: 'myapp', env: 'dev' });
+media.grantReadWrite(myLambda);
+
+// SQS worker + EventBridge Scheduler group. Campaign beats days out use
+// Scheduler `at()`, not SQS DelaySeconds (15 min cap).
+const jobs = new JobQueue(this, 'Jobs', { namespace: 'myapp', env: 'dev' });
+jobs.grantSchedule(myLambda);
+jobs.grantConsume(myWorker);
 ```
 
 `aws-cdk-lib`/`constructs` are peer dependencies, not bundled — a consuming
@@ -106,7 +119,8 @@ own copy.
 Published to the public npm registry under the `@bubltec` scope:
 `@bubltec/mycota-config`, `@bubltec/mycota-dynamo`, `@bubltec/mycota-auth`,
 `@bubltec/mycota-professional-verification`, `@bubltec/mycota-cdk`,
-`@bubltec/mycota-payments`, `@bubltec/mycota-social`. All packages version in
+`@bubltec/mycota-payments`, `@bubltec/mycota-social`, `@bubltec/mycota-media`,
+`@bubltec/mycota-jobs`, `@bubltec/mycota-tokens`. All packages version in
 lockstep. The checked-in `version` field in each package.json is a permanent
 placeholder (`0.0.0`) — it's never authoritative; CI computes the real version
 fresh at publish time from git tags.

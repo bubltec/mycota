@@ -1,8 +1,8 @@
 # @bubltec/mycota-cdk
 
-CDK constructs for mycota's SSM-backed config story (`@bubltec/mycota-config`).
-Two exports: a plain IAM-grant helper, and a construct that bootstraps and
-tears down an ephemeral stack's config from CDK itself.
+CDK constructs for mycota: SSM config grants and ephemeral bootstrap, plus
+a private `MediaBucket` (S3 + CloudFront OAC) and a `JobQueue` (SQS + DLQ +
+EventBridge Scheduler group).
 
 `aws-cdk-lib`/`constructs` are **peer dependencies**, not bundled — bring
 your own pinned CDK version. Installing this package doesn't pull in a
@@ -71,6 +71,36 @@ clean up once.
 The handler's own execution role only gets exactly what it needs: read on
 `sourceEnv`, read+write+delete on `targetEnv` — scoped per-instance, not a
 blanket grant across the whole namespace.
+
+## `MediaBucket` construct
+
+Private S3 bucket (BlockPublicAccess ALL) with an optional CloudFront
+distribution using origin access control. Public `MediaStore` objects use
+the distribution domain; private objects still go through signed S3 GETs.
+Never a public-read bucket.
+
+```ts
+import { MediaBucket } from '@bubltec/mycota-cdk';
+
+const media = new MediaBucket(this, 'Media', { namespace: 'myapp', env: 'dev' });
+media.grantReadWrite(myLambda);
+// media.publicBaseUrl → https://xxxx.cloudfront.net
+```
+
+## `JobQueue` construct
+
+SQS queue + DLQ + EventBridge Scheduler group + a role Scheduler assumes to
+`SendMessage`. Delayed work days out (campaign beats) uses Scheduler `at()`,
+not SQS `DelaySeconds` (15 minute cap). Runtime counterpart:
+`@bubltec/mycota-jobs` `EventBridgeJobScheduler`.
+
+```ts
+import { JobQueue } from '@bubltec/mycota-cdk';
+
+const jobs = new JobQueue(this, 'Jobs', { namespace: 'myapp', env: 'dev' });
+jobs.grantSchedule(myApi);
+jobs.grantConsume(myWorker);
+```
 
 ## Testing this package locally
 
