@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { App, Stack } from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import { Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import { Vpc } from 'aws-cdk-lib/aws-ec2';
 import { JobQueue } from './job-queue.js';
 import { MediaBucket } from './media-bucket.js';
+import { PostgresInstance } from './postgres-instance.js';
 
 describe('MediaBucket', () => {
   it('creates a private bucket and a CloudFront distribution by default', () => {
@@ -46,5 +48,21 @@ describe('JobQueue', () => {
     const json = JSON.stringify(template.toJSON());
     expect(json).toContain('scheduler:CreateSchedule');
     expect(json).toContain('sqs:ReceiveMessage');
+  });
+});
+
+describe('PostgresInstance', () => {
+  it('creates encrypted RDS Postgres in private subnets', () => {
+    const app = new App();
+    const stack = new Stack(app, 'TestStack');
+    const vpc = new Vpc(stack, 'Vpc', { maxAzs: 2, natGateways: 1 });
+    const db = new PostgresInstance(stack, 'Db', { namespace: 'sloth', env: 'dev', vpc });
+    expect(db.databaseName).toBe('sloth');
+
+    const template = Template.fromStack(stack);
+    template.hasResourceProperties('AWS::RDS::DBInstance', {
+      Engine: 'postgres',
+      StorageEncrypted: true,
+    });
   });
 });
