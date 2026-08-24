@@ -26,5 +26,10 @@
     "@types/node": "^22.10.0",
     "typescript": "^5.8.0",
     "vitest": "^2.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bubltec/mycota",
+    "directory": "packages/social"
   }
 }
