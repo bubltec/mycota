@@ -30,5 +30,10 @@
   "devDependencies": {
     "@types/node": "^22.10.0",
     "typescript": "^5.8.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bubltec/mycota",
+    "directory": "packages/professional-verification"
   }
 }
