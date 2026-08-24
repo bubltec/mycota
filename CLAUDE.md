@@ -30,6 +30,7 @@ absent) — if one exists, that means work to reconcile this exact situation
 is already underway; ask the user how they want to proceed instead of
 stashing over it.
 
-Also worth checking: `main` here auto-publishes `@bubltec/mycota-*@dev` on
-every relevant push (see `.github/workflows/ci.yml`) — if `origin/main`
-moved, a newer dev version likely already exists on npm too.
+Also worth checking: `main` here auto-publishes `@bubltec/mycota-*` on every
+relevant push (see `.github/workflows/ci.yml`) — real releases land on
+`latest` (+ git tag + GitHub Release); opt-in `#next` pushes go to the `next`
+dist-tag. If `origin/main` moved, a newer version likely already exists on npm.
