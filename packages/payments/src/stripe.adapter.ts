@@ -95,6 +95,8 @@ export class StripePaymentGateway implements PaymentGateway {
       payment_intent: input.paymentId,
       amount: input.amount?.amountCents,
       reason: input.reason,
+      refund_application_fee: input.reverseApplicationFee ?? true,
+      reverse_transfer: input.reverseTransfer ?? Boolean(input.reverseApplicationFee ?? true),
     });
     const status =
       refund.status === 'succeeded' || refund.status === 'pending' || refund.status === 'failed'
