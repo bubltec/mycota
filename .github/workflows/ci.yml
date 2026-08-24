@@ -59,6 +59,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      id-token: write
     steps:
       - uses: actions/checkout@v7
         with:
@@ -128,8 +129,6 @@ jobs:
       - run: pnpm -r exec -- npm pkg set version="${{ steps.version.outputs.version }}"
 
       - run: pnpm -r publish --tag ${{ steps.version.outputs.tag }} --no-git-checks
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Tag + GitHub Release (real releases only)
         if: steps.version.outputs.bump != 'none'
