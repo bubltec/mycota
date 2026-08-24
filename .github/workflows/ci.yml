@@ -11,6 +11,18 @@ on:
       - 'tsconfig.base.json'
       - 'pnpm-lock.yaml'
       - '.github/workflows/ci.yml'
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 'Version bump for a release from current main'
+        required: true
+        default: minor
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+          - next
 
 jobs:
   check:
@@ -29,21 +41,21 @@ jobs:
 
       - run: pnpm turbo run typecheck lint build test
 
-  # Two release paths, both driven off the latest git tag (not a committed
-  # package.json version — package.json's checked-in version is a
-  # permanent placeholder, see README). Every relevant push either:
-  #  - cuts a real release to `latest` + a `vX.Y.Z` git tag, if the
-  #    triggering commit's message contains #major/#minor/#patch (put the
-  #    marker in the PR title — that's what becomes the squash-merge
-  #    commit subject verbatim); or
-  #  - otherwise publishes a rolling prerelease to `next`, versioned off
-  #    the latest real tag's patch+1.
-  # A push does one or the other, never both. The `main-merge` ruleset only
-  # targets the branch ref, not tags, so pushing a release tag here needs
-  # no branch-protection bypass — just `contents: write` on this job.
+  # Releases are driven off the latest git tag (not a committed package.json
+  # version — package.json's checked-in version is a permanent placeholder,
+  # see README). Every relevant push to main publishes to npm; real semver
+  # releases also get a git tag and GitHub Release. Bump level is chosen by:
+  #  1. workflow_dispatch input (manual "Run workflow" in Actions)
+  #  2. explicit #major/#minor/#patch/#next in the commit message
+  #  3. conventional commit prefix on the subject (feat: → minor, fix: → patch)
+  #  4. default → patch
+  # Put explicit markers in the PR title — that's what a squash-merge commit
+  # subject becomes verbatim. Use #next to opt into a rolling prerelease only.
   publish:
     needs: check
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -72,14 +84,30 @@ jobs:
           LATEST=${LATEST_TAG#v}
           IFS='.' read -r MAJOR MINOR PATCH <<< "$LATEST"
 
+          SUBJECT=$(git log -1 --format=%s)
           MSG=$(git log -1 --format=%B)
-          if echo "$MSG" | grep -qw '#major'; then
+
+          if [ "${{ github.event_name }}" = workflow_dispatch ]; then
+            BUMP=${{ inputs.bump }}
+          elif echo "$MSG" | grep -qw '#major'; then
             BUMP=major
           elif echo "$MSG" | grep -qw '#minor'; then
             BUMP=minor
           elif echo "$MSG" | grep -qw '#patch'; then
             BUMP=patch
+          elif echo "$MSG" | grep -qw '#next'; then
+            BUMP=none
+          elif echo "$SUBJECT" | grep -qE '^feat(\([^)]+\))?!:'; then
+            BUMP=major
+          elif echo "$SUBJECT" | grep -qE '^feat(\([^)]+\))?:'; then
+            BUMP=minor
+          elif echo "$SUBJECT" | grep -qE '^fix(\([^)]+\))?:'; then
+            BUMP=patch
           else
+            BUMP=patch
+          fi
+
+          if [ "$BUMP" = next ]; then
             BUMP=none
           fi
 

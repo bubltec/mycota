@@ -105,27 +105,25 @@ own copy.
 
 Published to the public npm registry under the `@bubltec` scope:
 `@bubltec/mycota-config`, `@bubltec/mycota-dynamo`, `@bubltec/mycota-auth`,
-`@bubltec/mycota-professional-verification`, `@bubltec/mycota-cdk`.
-`@bubltec/mycota-payments` and `@bubltec/mycota-social` are in-tree and will
-publish on the next lockstep release. All packages version in lockstep. The checked-in `version` field in each package.json is
-a permanent placeholder (`0.0.0`) — it's never authoritative; CI computes
-the real version fresh at publish time from git tags.
+`@bubltec/mycota-professional-verification`, `@bubltec/mycota-cdk`,
+`@bubltec/mycota-payments`, `@bubltec/mycota-social`. All packages version in
+lockstep. The checked-in `version` field in each package.json is a permanent
+placeholder (`0.0.0`) — it's never authoritative; CI computes the real version
+fresh at publish time from git tags.
 
-Two release paths, both driven by CI on every relevant push to `main`
-(`.github/workflows/ci.yml`):
+Every relevant push to `main` (`.github/workflows/ci.yml`) publishes to npm.
+Real semver releases also get a `vX.Y.Z` git tag and a GitHub Release. Bump
+level is chosen automatically:
 
-- **Real release** — if the triggering commit's message contains
-  `#major`, `#minor`, or `#patch` (put the marker in the **PR title**,
-  since that's what a squash-merge commit's subject becomes verbatim),
-  CI bumps the version accordingly from the latest `vX.Y.Z` git tag,
-  publishes under the `latest` dist-tag, pushes the new tag, and creates a
-  GitHub Release.
-- **Rolling prerelease** — every other relevant push publishes under the
-  `next` dist-tag, versioned as the latest real tag's patch+1 plus a
-  `-next.<run-number>` suffix (e.g. `1.2.1-next.43`). No git tag, no
-  GitHub Release — purely ephemeral, same as before.
+- **`feat:` PR/commit** → minor bump (e.g. `0.1.0` → `0.2.0`)
+- **`fix:` PR/commit** → patch bump
+- **everything else** → patch bump
+- **override** with `#major`, `#minor`, or `#patch` in the PR title (squash-merge
+  subject); use `#next` to publish a rolling prerelease to the `next` dist-tag
+  only (no git tag, no GitHub Release)
 
-A push does one or the other, never both.
+To cut a release from current `main` without a new commit: Actions → CI → **Run
+workflow** → choose the bump level.
 
 Install whichever packages you need:
 
