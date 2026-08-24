@@ -11,6 +11,8 @@ A pnpm + turbo monorepo (same shape as btfp itself), so each concern is its own 
 - **`packages/auth`** → `@bubltec/mycota-auth` — `MycotaAuthModule.forRootAsync({ useFactory })`, `JwtAuthGuard`, `VerifiedGuard`, `CurrentUser`, `UsersService`, `EmailCodeService`, plus the SSM convenience `buildMycotaAuthConfigFromSsm`. Depends on `@bubltec/mycota-dynamo` and `@bubltec/mycota-config`.
 - **`packages/professional-verification`** → `@bubltec/mycota-professional-verification` — request/confirm/review workflow for "prove you belong to an organization," built on `@bubltec/mycota-auth`'s email-code flow. Depends on `@bubltec/mycota-auth`.
 - **`packages/cdk`** → `@bubltec/mycota-cdk` — CDK constructs for the config story above: `grantSsmConfigRead` and the `EphemeralConfig` construct. Depends on `@bubltec/mycota-config`; `aws-cdk-lib`/`constructs` are peer dependencies (bring your own pinned CDK version). See below.
+- **`packages/payments`** → `@bubltec/mycota-payments` — `PaymentGateway` port, `FakePaymentGateway` for local/tests, and a `StripePaymentGateway` that destination-charges Stripe Connect accounts. No Nest, no `stripe` SDK dependency — the consuming app passes a Stripe-shaped client in. Swap Stripe for Adyen/Square later by implementing the same port.
+- **`packages/social`** → `@bubltec/mycota-social` — `SocialPublisher` port, a capability map that is honest about what each official API can actually do (TikTok is draft-only until partnership approval; Instagram Stories are not claimed), a `SocialPublisherRegistry` for fan-out, plus Meta / TikTok / X adapters over injected `fetch`.
 
 ## Configuration management (`@bubltec/mycota-config`)
 
@@ -103,8 +105,9 @@ own copy.
 
 Published to the public npm registry under the `@bubltec` scope:
 `@bubltec/mycota-config`, `@bubltec/mycota-dynamo`, `@bubltec/mycota-auth`,
-`@bubltec/mycota-professional-verification`, `@bubltec/mycota-cdk`. All five
-version in lockstep. The checked-in `version` field in each package.json is
+`@bubltec/mycota-professional-verification`, `@bubltec/mycota-cdk`.
+`@bubltec/mycota-payments` and `@bubltec/mycota-social` are in-tree and will
+publish on the next lockstep release. All packages version in lockstep. The checked-in `version` field in each package.json is
 a permanent placeholder (`0.0.0`) — it's never authoritative; CI computes
 the real version fresh at publish time from git tags.
 
