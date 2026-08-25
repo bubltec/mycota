@@ -35,6 +35,9 @@ importers:
       '@bubltec/mycota-dynamo':
         specifier: workspace:*
         version: link:../dynamo
+      '@bubltec/mycota-mail':
+        specifier: workspace:*
+        version: link:../mail
       '@nestjs/common':
         specifier: ^10.4.0
         version: 10.4.22(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -172,6 +175,18 @@ importers:
         specifier: ^2.1.0
         version: 2.1.9(@types/node@22.20.1)
 
+  packages/mail:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.0
+        version: 22.20.1
+      typescript:
+        specifier: ^5.8.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@22.20.1)
+
   packages/media:
     devDependencies:
       '@types/node':
@@ -229,6 +244,18 @@ importers:
       typescript:
         specifier: ^5.8.0
         version: 5.9.3
+
+  packages/sms:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.0
+        version: 22.20.1
+      typescript:
+        specifier: ^5.8.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@22.20.1)
 
   packages/social:
     devDependencies:
