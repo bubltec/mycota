@@ -1,18 +1,14 @@
 import type { Mailer, MailMessage, SendMailResult, SesClient } from './ports.js';
+import { prefixNonProd } from './stage.js';
 
 export interface SesMailerOptions {
   defaultFrom: string;
-  /** When not `prod`, prefix subjects with `[stage] `. */
+  /** When not `prod`, prefix subjects with `[stage] `. Unset stage uses `dev`. */
   stage?: string;
 }
 
 function asList(value: string | string[]): string[] {
   return (Array.isArray(value) ? value : [value]).map((row) => row.trim()).filter(Boolean);
-}
-
-function subjectFor(subject: string, stage?: string): string {
-  if (!stage || stage === 'prod') return subject;
-  return `[${stage}] ${subject}`;
 }
 
 /**
@@ -36,7 +32,7 @@ export class SesMailer implements Mailer {
     const result = await this.client.sendEmail({
       from,
       to,
-      subject: subjectFor(message.subject, this.options.stage),
+      subject: prefixNonProd(message.subject, this.options.stage),
       text: message.text,
       html: message.html,
       replyTo: message.replyTo ? [message.replyTo] : undefined,

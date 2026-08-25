@@ -47,4 +47,15 @@ describe('SesMailer', () => {
     const mailer = new SesMailer(client, { defaultFrom: 'noreply@example.com', stage: 'prod' });
     await mailer.send({ to: 'ada@example.com', subject: 'Invite', text: 'hi' });
   });
+
+  it('prefixes [dev] when stage is unset', async () => {
+    const client: SesClient = {
+      sendEmail: vi.fn(async (input) => {
+        expect(input.subject).toBe('[dev] Invite');
+        return { messageId: 'ses_3' };
+      }),
+    };
+    const mailer = new SesMailer(client, { defaultFrom: 'noreply@example.com' });
+    await mailer.send({ to: 'ada@example.com', subject: 'Invite', text: 'hi' });
+  });
 });

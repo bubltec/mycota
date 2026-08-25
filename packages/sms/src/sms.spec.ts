@@ -34,4 +34,14 @@ describe('SnsSmsSender', () => {
     const result = await sender.send({ to: '555-123-4567', body: 'Accept now' });
     expect(result.messageId).toBe('sns_1');
   });
+
+  it('prefixes [dev] when stage is unset', async () => {
+    const client: SnsSmsClient = {
+      publishSms: vi.fn(async (input) => {
+        expect(input.message).toBe('[dev] Accept now');
+        return { messageId: 'sns_2' };
+      }),
+    };
+    await new SnsSmsSender(client).send({ to: '+15551234567', body: 'Accept now' });
+  });
 });

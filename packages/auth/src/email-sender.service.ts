@@ -1,9 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
-import { SesMailer, type Mailer, type SesClient } from '@bubltec/mycota-mail';
+import { SesMailer, type Mailer, type SesClient, type SesMailerOptions } from '@bubltec/mycota-mail';
 import { MYCOTA_AUTH_CONFIG, type MycotaAuthConfig } from './auth.config.js';
 
-function sesClientFromSdk(client: SESClient): SesClient {
+export function sesMailerOptionsFromAuth(
+  config: Pick<MycotaAuthConfig, 'emailFromAddress' | 'stage'>,
+): SesMailerOptions {
+  return { defaultFrom: config.emailFromAddress, stage: config.stage };
+}
+
+export function sesClientFromSdk(client: Pick<SESClient, 'send'>): SesClient {
   return {
     async sendEmail(input) {
       const result = await client.send(
@@ -32,10 +38,7 @@ export class EmailSenderService {
 
   constructor(@Inject(MYCOTA_AUTH_CONFIG) config: MycotaAuthConfig) {
     const client = new SESClient({ region: config.awsRegion ?? 'us-east-1' });
-    this.mailer = new SesMailer(sesClientFromSdk(client), {
-      defaultFrom: config.emailFromAddress,
-      stage: config.stage,
-    });
+    this.mailer = new SesMailer(sesClientFromSdk(client), sesMailerOptionsFromAuth(config));
   }
 
   async sendVerificationCode(toEmail: string, code: string): Promise<void> {

@@ -1,15 +1,11 @@
 import type { SendSmsResult, SmsMessage, SmsSender, SnsSmsClient } from './ports.js';
 import { toE164 } from './phone.js';
+import { prefixNonProd } from './stage.js';
 
 export interface SnsSmsSenderOptions {
-  /** When not `prod`, prefix bodies with `[stage] `. */
+  /** When not `prod`, prefix bodies with `[stage] `. Unset stage uses `dev`. */
   stage?: string;
   senderId?: string;
-}
-
-function bodyFor(body: string, stage?: string): string {
-  if (!stage || stage === 'prod') return body;
-  return `[${stage}] ${body}`;
 }
 
 /**
@@ -31,7 +27,7 @@ export class SnsSmsSender implements SmsSender {
 
     const result = await this.client.publishSms({
       phoneNumber,
-      message: bodyFor(message.body, this.options.stage),
+      message: prefixNonProd(message.body, this.options.stage),
       senderId: message.senderId ?? this.options.senderId,
     });
     if (!result.messageId) throw new Error('SNS did not return a message id');
