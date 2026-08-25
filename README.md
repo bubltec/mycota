@@ -8,7 +8,7 @@ A pnpm + turbo monorepo (same shape as btfp itself), so each concern is its own 
 
 - **`packages/dynamo`** → `@bubltec/mycota-dynamo` — `DynamoModule` (global, points at DynamoDB Local when `DYNAMODB_ENDPOINT` is set), `DYNAMO_DOC_CLIENT`, `stripDynamoKeys`. No internal dependencies.
 - **`packages/config`** → `@bubltec/mycota-config` — SSM Parameter Store-backed configuration, namespaced by app and environment. No internal dependencies. See below.
-- **`packages/auth`** → `@bubltec/mycota-auth` — `MycotaAuthModule.forRootAsync({ useFactory })`, `JwtAuthGuard`, `VerifiedGuard`, `CurrentUser`, `UsersService`, `EmailCodeService`, plus the SSM convenience `buildMycotaAuthConfigFromSsm`. Depends on `@bubltec/mycota-dynamo` and `@bubltec/mycota-config`.
+- **`packages/auth`** → `@bubltec/mycota-auth` — `MycotaAuthModule.forRootAsync({ useFactory })`, `JwtAuthGuard`, `VerifiedGuard`, `CurrentUser`, `UsersService`, `EmailCodeService`, plus the SSM convenience `buildMycotaAuthConfigFromSsm`. Depends on `@bubltec/mycota-dynamo`, `@bubltec/mycota-config`, and `@bubltec/mycota-mail`.
 - **`packages/professional-verification`** → `@bubltec/mycota-professional-verification` — request/confirm/review workflow for "prove you belong to an organization," built on `@bubltec/mycota-auth`'s email-code flow. Depends on `@bubltec/mycota-auth`.
 - **`packages/cdk`** → `@bubltec/mycota-cdk` — CDK constructs: `grantSsmConfigRead`, `EphemeralConfig`, `MediaBucket` (private S3 + CloudFront OAC), `JobQueue` (SQS + DLQ + EventBridge Scheduler group), and `PostgresInstance` (RDS Postgres 16; app brings the VPC). Depends on `@bubltec/mycota-config`; `aws-cdk-lib`/`constructs` are peer dependencies (bring your own pinned CDK version). See below.
 - **`packages/payments`** → `@bubltec/mycota-payments` — `PaymentGateway` port, `FakePaymentGateway` for local/tests, and a `StripePaymentGateway` that destination-charges Stripe Connect accounts. `ConnectOnboarding` + `FakeConnectOnboarding` / `StripeConnectOnboarding` for Express account KYC (refresh/return URLs). Refunds reverse the application fee by default. No Nest, no `stripe` SDK dependency — the consuming app passes a Stripe-shaped client in.
@@ -17,6 +17,8 @@ A pnpm + turbo monorepo (same shape as btfp itself), so each concern is its own 
 - **`packages/jobs`** → `@bubltec/mycota-jobs` — `JobScheduler` port for delayed work (campaign beats days out). `FakeJobScheduler.processDue` locally; `EventBridgeJobScheduler` uses Scheduler `at()` in production — SQS delay is 15 minutes and is the wrong primitive.
 - **`packages/tokens`** → `@bubltec/mycota-tokens` — `TokenVault` for OAuth access/refresh tokens. Refreshes before expiry, marks `needs_reauth` when refresh fails. `EncryptedTokenStore` + `AesGcmSecretBox` at rest. Meta / TikTok / X refreshers over injected `fetch`. Generic `provider` string — not coupled to `@bubltec/mycota-social`.
 - **`packages/postgres`** → `@bubltec/mycota-postgres` — `SqlDatabase` over an injected `pg.Pool` (no `pg` dependency here). Nested `transaction` joins the open transaction. `applyMigrations` + `VECTOR_EXTENSION`. Product tables stay in the consuming app. Local Docker / RDS are the same adapter — there is no in-memory SQL fake.
+- **`packages/mail`** → `@bubltec/mycota-mail` — `Mailer` port, `FakeMailer` for local/tests, `SesMailer` over an injected SES-shaped client. Non-prod stages prefix subjects with `[stage]`. No AWS SDK dependency.
+- **`packages/sms`** → `@bubltec/mycota-sms` — `SmsSender` port, `FakeSmsSender` for local/tests, `SnsSmsSender` over an injected SNS-shaped client. Numbers are normalized to E.164. No AWS SDK dependency.
 
 ## Configuration management (`@bubltec/mycota-config`)
 
@@ -127,7 +129,7 @@ Published to the public npm registry under the `@bubltec` scope:
 `@bubltec/mycota-config`, `@bubltec/mycota-dynamo`, `@bubltec/mycota-auth`,
 `@bubltec/mycota-professional-verification`, `@bubltec/mycota-cdk`,
 `@bubltec/mycota-payments`, `@bubltec/mycota-social`, `@bubltec/mycota-media`,
-`@bubltec/mycota-jobs`, `@bubltec/mycota-tokens`, `@bubltec/mycota-postgres`. All packages version in
+`@bubltec/mycota-jobs`, `@bubltec/mycota-tokens`, `@bubltec/mycota-postgres`, `@bubltec/mycota-mail`, `@bubltec/mycota-sms`. All packages version in
 lockstep. The checked-in `version` field in each package.json is a permanent
 placeholder (`0.0.0`) — it's never authoritative; CI computes the real version
 fresh at publish time from git tags.
