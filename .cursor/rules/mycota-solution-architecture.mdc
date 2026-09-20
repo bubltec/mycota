@@ -133,5 +133,5 @@ Copy `packages/mail/package.json` when adding a package. Required:
 ## 9. Consumers
 
 *   btfp pulls releases with `scripts/mycota-pull.sh`, pinning an exact version (pnpm's `minimumReleaseAge` only auto-allows exact pins).
-*   Consumers must be on Node 24+ and the peer majors above, and set `"types": ["node"]` under TypeScript 7.
+*   This repo requires Node 26 (`engines` plus `engineStrict`, `.nvmrc`, CI). The published packages declare no `engines`, so they do not block other Node versions, but only Node 26 is tested. Consumers must also use the peer majors above and set `"types": ["node"]` under TypeScript 7.
 *   A breaking change here (peer range, export removal, config shape) must be called out in the PR title and README.

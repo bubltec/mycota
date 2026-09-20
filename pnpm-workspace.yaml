@@ -7,6 +7,9 @@ allowBuilds:
   '@bubltec/mycota-cdk': true
 # Pin exact versions when adding dependencies. Kept in sync with .npmrc.
 saveExact: true
+# Fail (not just warn) when the running Node does not satisfy `engines` (Node 26).
+# Only this setting works: pnpm 11 ignores `engine-strict` in .npmrc.
+engineStrict: true
 # Install native optional deps (rollup, oxlint, esbuild) for both Mac arches so
 # a Rosetta Node and an arm64 Node can share the same node_modules. Without
 # this, whichever arch the first install ran on is the only one that works.
