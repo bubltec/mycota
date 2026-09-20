@@ -9,13 +9,13 @@ importers:
   .:
     devDependencies:
       oxlint:
-        specifier: ^1.83.0
+        specifier: 1.83.0
         version: 1.83.0
       turbo:
-        specifier: ^2.11.2
+        specifier: 2.11.2
         version: 2.11.2
       typescript:
-        specifier: ^7.0.2
+        specifier: 7.0.2
         version: 7.0.2
 
   packages/auth:
@@ -46,52 +46,52 @@ importers:
         version: 2.0.0
     devDependencies:
       '@fastify/cookie':
-        specifier: ^11.1.2
+        specifier: 11.1.2
         version: 11.1.2
       '@nestjs/common':
-        specifier: ^12.0.3
+        specifier: 12.0.3
         version: 12.0.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/core':
-        specifier: ^12.0.3
+        specifier: 12.0.3
         version: 12.0.3(@nestjs/common@12.0.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/jwt':
-        specifier: ^12.0.2
+        specifier: 12.0.2
         version: 12.0.2(@nestjs/common@12.0.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))
       '@nestjs/passport':
-        specifier: ^12.0.0
+        specifier: 12.0.0
         version: 12.0.0(@nestjs/common@12.0.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(passport@0.7.0)
       '@types/node':
-        specifier: ^26.6.2
+        specifier: 26.6.2
         version: 26.6.2
       '@types/passport-github2':
-        specifier: ^1.2.9
+        specifier: 1.2.9
         version: 1.2.9
       '@types/passport-google-oauth20':
-        specifier: ^2.0.17
+        specifier: 2.0.17
         version: 2.0.17
       class-transformer:
-        specifier: ^0.5.1
+        specifier: 0.5.1
         version: 0.5.1
       class-validator:
-        specifier: ^0.15.1
+        specifier: 0.15.1
         version: 0.15.1
       fastify:
-        specifier: ^5.12.5
+        specifier: 5.12.5
         version: 5.12.5
       passport:
-        specifier: ^0.7.0
+        specifier: 0.7.0
         version: 0.7.0
       reflect-metadata:
-        specifier: ^0.2.2
+        specifier: 0.2.2
         version: 0.2.2
       rxjs:
-        specifier: ^7.8.2
+        specifier: 7.8.2
         version: 7.8.2
       typescript:
-        specifier: ^7.0.2
+        specifier: 7.0.2
         version: 7.0.2
       vitest:
-        specifier: ^5.0.1
+        specifier: 5.0.1
         version: 5.0.1(@types/node@26.6.2)(vite@8.3.0(@types/node@26.6.2)(esbuild@0.28.2))
 
   packages/cdk:
@@ -101,25 +101,25 @@ importers:
         version: link:../config
     devDependencies:
       '@types/aws-lambda':
-        specifier: ^8.10.163
+        specifier: 8.10.163
         version: 8.10.163
       '@types/node':
-        specifier: ^26.6.2
+        specifier: 26.6.2
         version: 26.6.2
       aws-cdk-lib:
-        specifier: ^2.270.0
+        specifier: 2.270.0
         version: 2.270.0(constructs@10.8.1)
       constructs:
-        specifier: ^10.8.1
+        specifier: 10.8.1
         version: 10.8.1
       esbuild:
-        specifier: ^0.28.2
+        specifier: 0.28.2
         version: 0.28.2
       typescript:
-        specifier: ^7.0.2
+        specifier: 7.0.2
         version: 7.0.2
       vitest:
-        specifier: ^5.0.1
+        specifier: 5.0.1
         version: 5.0.1(@types/node@26.6.2)(vite@8.3.0(@types/node@26.6.2)(esbuild@0.28.2))
 
   packages/config:
@@ -129,16 +129,16 @@ importers:
         version: 3.1136.0
     devDependencies:
       '@types/node':
-        specifier: ^26.6.2
+        specifier: 26.6.2
         version: 26.6.2
       aws-sdk-client-mock:
-        specifier: ^4.1.0
+        specifier: 4.1.0
         version: 4.1.0
       typescript:
-        specifier: ^7.0.2
+        specifier: 7.0.2
         version: 7.0.2
       vitest:
-        specifier: ^5.0.1
+        specifier: 5.0.1
         version: 5.0.1(@types/node@26.6.2)(vite@8.3.0(@types/node@26.6.2)(esbuild@0.28.2))
 
   packages/dynamo:
@@ -151,76 +151,76 @@ importers:
         version: 3.1136.0(@aws-sdk/client-dynamodb@3.1136.0)
     devDependencies:
       '@nestjs/common':
-        specifier: ^12.0.3
+        specifier: 12.0.3
         version: 12.0.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@types/node':
-        specifier: ^26.6.2
+        specifier: 26.6.2
         version: 26.6.2
       typescript:
-        specifier: ^7.0.2
+        specifier: 7.0.2
         version: 7.0.2
       vitest:
-        specifier: ^5.0.1
+        specifier: 5.0.1
         version: 5.0.1(@types/node@26.6.2)(vite@8.3.0(@types/node@26.6.2)(esbuild@0.28.2))
 
   packages/jobs:
     devDependencies:
       '@types/node':
-        specifier: ^26.6.2
+        specifier: 26.6.2
         version: 26.6.2
       typescript:
-        specifier: ^7.0.2
+        specifier: 7.0.2
         version: 7.0.2
       vitest:
-        specifier: ^5.0.1
+        specifier: 5.0.1
         version: 5.0.1(@types/node@26.6.2)(vite@8.3.0(@types/node@26.6.2)(esbuild@0.28.2))
 
   packages/mail:
     devDependencies:
       '@types/node':
-        specifier: ^26.6.2
+        specifier: 26.6.2
         version: 26.6.2
       typescript:
-        specifier: ^7.0.2
+        specifier: 7.0.2
         version: 7.0.2
       vitest:
-        specifier: ^5.0.1
+        specifier: 5.0.1
         version: 5.0.1(@types/node@26.6.2)(vite@8.3.0(@types/node@26.6.2)(esbuild@0.28.2))
 
   packages/media:
     devDependencies:
       '@types/node':
-        specifier: ^26.6.2
+        specifier: 26.6.2
         version: 26.6.2
       typescript:
-        specifier: ^7.0.2
+        specifier: 7.0.2
         version: 7.0.2
       vitest:
-        specifier: ^5.0.1
+        specifier: 5.0.1
         version: 5.0.1(@types/node@26.6.2)(vite@8.3.0(@types/node@26.6.2)(esbuild@0.28.2))
 
   packages/payments:
     devDependencies:
       '@types/node':
-        specifier: ^26.6.2
+        specifier: 26.6.2
         version: 26.6.2
       typescript:
-        specifier: ^7.0.2
+        specifier: 7.0.2
         version: 7.0.2
       vitest:
-        specifier: ^5.0.1
+        specifier: 5.0.1
         version: 5.0.1(@types/node@26.6.2)(vite@8.3.0(@types/node@26.6.2)(esbuild@0.28.2))
 
   packages/postgres:
     devDependencies:
       '@types/node':
-        specifier: ^26.6.2
+        specifier: 26.6.2
         version: 26.6.2
       typescript:
-        specifier: ^7.0.2
+        specifier: 7.0.2
         version: 7.0.2
       vitest:
-        specifier: ^5.0.1
+        specifier: 5.0.1
         version: 5.0.1(@types/node@26.6.2)(vite@8.3.0(@types/node@26.6.2)(esbuild@0.28.2))
 
   packages/professional-verification:
@@ -230,55 +230,55 @@ importers:
         version: link:../auth
     devDependencies:
       '@nestjs/common':
-        specifier: ^12.0.3
+        specifier: 12.0.3
         version: 12.0.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@types/node':
-        specifier: ^26.6.2
+        specifier: 26.6.2
         version: 26.6.2
       class-transformer:
-        specifier: ^0.5.1
+        specifier: 0.5.1
         version: 0.5.1
       class-validator:
-        specifier: ^0.15.1
+        specifier: 0.15.1
         version: 0.15.1
       typescript:
-        specifier: ^7.0.2
+        specifier: 7.0.2
         version: 7.0.2
 
   packages/sms:
     devDependencies:
       '@types/node':
-        specifier: ^26.6.2
+        specifier: 26.6.2
         version: 26.6.2
       typescript:
-        specifier: ^7.0.2
+        specifier: 7.0.2
         version: 7.0.2
       vitest:
-        specifier: ^5.0.1
+        specifier: 5.0.1
         version: 5.0.1(@types/node@26.6.2)(vite@8.3.0(@types/node@26.6.2)(esbuild@0.28.2))
 
   packages/social:
     devDependencies:
       '@types/node':
-        specifier: ^26.6.2
+        specifier: 26.6.2
         version: 26.6.2
       typescript:
-        specifier: ^7.0.2
+        specifier: 7.0.2
         version: 7.0.2
       vitest:
-        specifier: ^5.0.1
+        specifier: 5.0.1
         version: 5.0.1(@types/node@26.6.2)(vite@8.3.0(@types/node@26.6.2)(esbuild@0.28.2))
 
   packages/tokens:
     devDependencies:
       '@types/node':
-        specifier: ^26.6.2
+        specifier: 26.6.2
         version: 26.6.2
       typescript:
-        specifier: ^7.0.2
+        specifier: 7.0.2
         version: 7.0.2
       vitest:
-        specifier: ^5.0.1
+        specifier: 5.0.1
         version: 5.0.1(@types/node@26.6.2)(vite@8.3.0(@types/node@26.6.2)(esbuild@0.28.2))
 
 packages:

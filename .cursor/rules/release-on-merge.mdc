@@ -25,6 +25,15 @@ published version cannot be reused.
 Put the marker in the **PR title**, because that becomes the squash-merge commit
 subject verbatim.
 
+The CI step reads the **whole** commit message on `main` (`git log -1 --format=%B`),
+not just the subject, and looks for the markers as standalone words. Precedence is
+major, then minor, then patch, then next. So a `#major` written anywhere in the squash
+body, including inside pasted commit messages, also triggers a major release. Do not
+write those tokens in commit or PR bodies unless you mean them.
+
+To cut a **major** release, put `#major` (or use `feat!:`) in the PR title, for example
+`feat!: upgrade to NestJS 12 #major`. From 0.6.0 that produces 1.0.0.
+
 ## What this means when working here
 
 - **Never push to `main` or merge a PR without the user's explicit go-ahead.**
