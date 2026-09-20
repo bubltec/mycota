@@ -1,0 +1,133 @@
+---
+description: Architecture and best practices for the mycota library monorepo — publishable @bubltec/mycota-* packages (ports and adapters, Nest modules, CDK constructs), the peer-dependency policy, build/test tooling, and the new-package and release checklist.
+globs: packages/**/*.ts,packages/**/package.json,*.json,pnpm-workspace.yaml,.github/workflows/*.yml
+alwaysApply: false
+---
+
+# mycota Solution Architecture and Best Practices
+
+mycota is a pnpm + turbo monorepo of small, independently useful TypeScript packages published to npm under `@bubltec/`. They were extracted from badthingsforpets (btfp), which is the main consumer. Items marked **(recommended)** are not adopted yet; everything else describes what the repo already does and should keep doing.
+
+## 1. Repository Structure
+
+```plain text
+mycota/
+├── .cursor/rules/            # source of truth for agent instructions (see AGENTS.md)
+├── .github/workflows/ci.yml  # check on PRs; publish on main
+├── packages/
+│   └── <name>/
+│       ├── src/              # index.ts + role-named files + colocated *.spec.ts
+│       ├── dist/             # build output, published, gitignored
+│       ├── package.json
+│       └── tsconfig.json     # extends ../../tsconfig.base.json
+├── .nvmrc
+├── .oxlintrc.json
+├── AGENTS.md / CLAUDE.md     # pointers only
+├── package.json
+├── pnpm-workspace.yaml
+├── tsconfig.base.json
+└── turbo.json
+```
+
+| File | Owns |
+| --- | --- |
+| `package.json` | `engines`, pinned `packageManager`, root scripts that fan out through turbo |
+| `pnpm-workspace.yaml` | Workspace globs, `allowBuilds`, `supportedArchitectures` (arm64 + x64 native binaries) |
+| `tsconfig.base.json` | Strict baseline, `"types": ["node"]`, decorator flags |
+| `turbo.json` | Task graph. Every task depends on `^build`, so dependents see built output |
+| `.oxlintrc.json` | Lint rules (oxlint, not ESLint) |
+| `.nvmrc` | Local Node version (26) |
+
+## 2. Package Design
+
+Every package is one of three kinds. Decide which before writing code.
+
+### Ports and adapters (framework-free)
+
+`jobs`, `mail`, `media`, `payments`, `postgres`, `sms`, `social`, `tokens`.
+
+*   `ports.ts` holds the interfaces the app depends on **and** the narrow client surface the adapter needs (`SesClient`, `SnsSmsClient`, ...).
+*   `fake.adapter.ts` is an in-memory implementation for tests and local runs. Ship a fake with every port.
+*   `<vendor>.adapter.ts` implements the port over an **injected** client. The package never imports the vendor SDK and never constructs a client, so it adds no SDK dependency and the app controls credentials and versions.
+*   `index.ts` re-exports the public surface explicitly, using `export type` for types.
+*   No Nest, no decorators. These packages must work in any Node app.
+
+### NestJS packages
+
+`auth`, `dynamo`, `professional-verification`.
+
+*   Expose a module (`MycotaAuthModule.forRootAsync({ useFactory })`), services, guards and decorators. Configuration is injected; the package reads no `process.env`.
+*   The framework is a **peer dependency** (section 3).
+*   DTOs carry a validator decorator on every property, because the consuming app's `ValidationPipe` strips undecorated ones.
+
+### Infrastructure
+
+`config` (SSM-backed configuration and its CLI) and `cdk` (constructs).
+
+*   CDK constructs must synth without AWS credentials: no `fromLookup`, no context lookups.
+*   Use `grant*` methods and least-privilege statements; comment any wildcard.
+*   Do not pin physical names on resources that may need replacement.
+*   `aws-cdk-lib` and `constructs` are peers, so the consuming app brings one pinned CDK version.
+
+### Dependency direction
+
+Internal dependencies flow one way and never form a cycle: `auth` → `config`, `dynamo`, `mail`; `professional-verification` → `auth`; `cdk` → `config`. Everything else is a leaf. Keep leaves free of internal dependencies. Use `workspace:*`; it is published as the exact lockstep version.
+
+## 3. Dependency Policy
+
+*   **Anything with singleton or global state must be a peer dependency**, with a matching `devDependency` for local builds. That means `@nestjs/*`, `class-validator`, `class-transformer`, `passport`, `reflect-metadata`, `rxjs`, `aws-cdk-lib` and `constructs`. A regular dependency lets the consumer end up with two copies, which breaks Nest DI and makes `class-validator` decorators register into a store the app's `ValidationPipe` never reads.
+*   Peer ranges list only the majors that are actually tested (currently `@nestjs/* ^12`, `class-validator ^0.15`). Widening a range requires testing it.
+*   Prefer an injected client over an SDK dependency. Where a package genuinely needs an SDK (`auth`, `dynamo`, `config`), it is an ordinary dependency.
+*   Check for updates against the registry (`pnpm outdated -r`) and upgrade deliberately, then run the full check (section 6).
+
+## 4. Package Manifest Contract
+
+Copy `packages/mail/package.json` when adding a package. Required:
+
+*   `name` `@bubltec/mycota-<name>`, `version` `"0.0.0"` (placeholder, see `release-on-merge`), `"type": "module"`.
+*   `main`, `types`, and an `exports` map pointing at `dist`. `files: ["dist"]`. `publishConfig.access: "public"`.
+*   Scripts: `build` (`tsc -b`), `typecheck` (`tsc -b --noEmit`), `lint` (`oxlint -c ../../.oxlintrc.json src`), `test` (`vitest run --exclude '**/dist/**'`).
+*   **`repository`** with `type`, `url: "https://github.com/bubltec/mycota"` and `directory: "packages/<name>"`. npm provenance rejects the publish with a 422 if the repository url is missing or does not match the GitHub repo.
+
+## 5. Conventions
+
+*   Files are `kebab-case` with a role suffix: `ports.ts`, `fake.adapter.ts`, `ses.adapter.ts`, `auth.service.ts`, `auth.module.ts`. Specs sit beside the source as `*.spec.ts`.
+*   Relative imports use the `.js` extension (NodeNext ESM). Built-ins use `node:`. Type-only imports use `import type` (`isolatedModules`).
+*   Strict TypeScript with `noUncheckedIndexedAccess`; no `any`.
+*   The tsconfig must declare `"types": ["node"]`. TypeScript 7 no longer auto-includes every `@types/*` package.
+*   Decorators work under TypeScript 7 and still emit `design:paramtypes`, which Nest DI relies on. Keep `emitDecoratorMetadata` on.
+
+## 6. Testing and Verification
+
+*   Runner is vitest 5. Each package has its own `test` script; turbo runs them all.
+*   Vitest 3+ no longer excludes `dist/`, so every `test` script passes `--exclude '**/dist/**'`. Without it the compiled `*.spec.js` copies run too.
+*   `vi.mock` and `vi.hoisted` must be at **module top level**. Vitest 5 rejects them inside `describe`.
+*   Prefer the package's own fake over mocking. Use `aws-sdk-client-mock` for code that talks to an SDK, and `aws-cdk-lib/assertions` for constructs.
+*   Full check before opening a PR: `pnpm turbo run typecheck lint build test`.
+*   **(recommended)** No spec compiles a real Nest module today. Add a smoke test that builds `MycotaAuthModule` with `@nestjs/testing`, so a framework upgrade proves DI still resolves.
+*   **(recommended)** Add `publint` and `@arethetypeswrong/cli` to CI to catch a broken `exports` map before publishing.
+
+## 7. New Package Checklist
+
+1. Copy `packages/mail/` and rename. Keep the `repository.directory` in sync.
+2. Add the package to the README package list.
+3. `pnpm install`, then `pnpm turbo run typecheck lint build test`.
+4. Merge. The first publish will fail for this package: **npm can only register a Trusted Publisher on a package that already exists.** Publish it once by hand from an interactive terminal (`npm publish --access public`, with your OTP).
+5. On npmjs.com open the package, then Settings, then Publishing access, then Trusted Publisher, and register GitHub Actions with repo `bubltec/mycota` and workflow `ci.yml` (no environment).
+6. Later releases publish through CI with no token.
+
+## 8. Common Pitfalls
+
+*   **Framework as a regular dependency** gives the consumer two Nest copies. Broken DI, dead validation.
+*   **Missing or mismatched `repository`** gives a 422 from npm provenance.
+*   **A 404 on `PUT` during publish** means the trusted-publisher config for that package does not match (repo, workflow filename) or the package does not exist yet. npm returns 404 instead of an auth error.
+*   **Native optional dependencies** (`rollup`, `oxlint`, `esbuild`) install only for the arch that ran the first install unless `supportedArchitectures` lists both. The symptom is "Cannot find module @rollup/rollup-darwin-arm64".
+*   **vitest running `dist/` specs** (see section 6).
+*   **`files: ["dist"]` also ships the compiled `*.spec.js` files.** Known waste. **(recommended)** Add `"!dist/**/*.spec.*"` to `files`.
+*   **Publishing is irreversible.** A merged PR is a release. Verify first.
+
+## 9. Consumers
+
+*   btfp pulls releases with `scripts/mycota-pull.sh`, pinning an exact version (pnpm's `minimumReleaseAge` only auto-allows exact pins).
+*   Consumers must be on Node 24+ and the peer majors above, and set `"types": ["node"]` under TypeScript 7.
+*   A breaking change here (peer range, export removal, config shape) must be called out in the PR title and README.
