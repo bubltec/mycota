@@ -49,3 +49,13 @@ To cut a **major** release, put `#major` (or use `feat!:`) in the PR title, for 
 - Publishing uses npm Trusted Publishing (GitHub OIDC), so the publish job needs
   `id-token: write` and every package must be registered as a trusted publisher.
   See `mycota-solution-architecture` for the new-package checklist.
+
+## What does not build or publish
+
+- A pull request that only changes documentation (`*.md`, `*.mdc`, `.cursor/`, CODEOWNERS,
+  LICENSE) skips the `check` job. The skip is per job, not a workflow path filter, so a
+  required `check` status would still be satisfied.
+- A push to `main` only runs CI, and so only publishes, when it touches `packages/**`
+  (markdown inside a package excluded), `turbo.json`, `tsconfig.base.json`,
+  `pnpm-lock.yaml` or the workflow itself. A docs-only merge releases nothing, so it never
+  moves `latest`.
