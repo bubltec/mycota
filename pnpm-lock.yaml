@@ -21,13 +21,13 @@ importers:
   packages/auth:
     dependencies:
       '@aws-sdk/client-bedrock-runtime':
-        specifier: ^3.1136.0
+        specifier: 3.1136.0
         version: 3.1136.0
       '@aws-sdk/client-ses':
-        specifier: ^3.1136.0
+        specifier: 3.1136.0
         version: 3.1136.0
       '@aws-sdk/lib-dynamodb':
-        specifier: ^3.1136.0
+        specifier: 3.1136.0
         version: 3.1136.0(@aws-sdk/client-dynamodb@3.1136.0)
       '@bubltec/mycota-config':
         specifier: workspace:*
@@ -39,10 +39,10 @@ importers:
         specifier: workspace:*
         version: link:../mail
       passport-github2:
-        specifier: ^0.1.12
+        specifier: 0.1.12
         version: 0.1.12
       passport-google-oauth20:
-        specifier: ^2.0.0
+        specifier: 2.0.0
         version: 2.0.0
     devDependencies:
       '@fastify/cookie':
@@ -125,7 +125,7 @@ importers:
   packages/config:
     dependencies:
       '@aws-sdk/client-ssm':
-        specifier: ^3.1136.0
+        specifier: 3.1136.0
         version: 3.1136.0
     devDependencies:
       '@types/node':
@@ -144,10 +144,10 @@ importers:
   packages/dynamo:
     dependencies:
       '@aws-sdk/client-dynamodb':
-        specifier: ^3.1136.0
+        specifier: 3.1136.0
         version: 3.1136.0
       '@aws-sdk/lib-dynamodb':
-        specifier: ^3.1136.0
+        specifier: 3.1136.0
         version: 3.1136.0(@aws-sdk/client-dynamodb@3.1136.0)
     devDependencies:
       '@nestjs/common':

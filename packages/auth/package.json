@@ -23,14 +23,14 @@
     "test": "vitest run --exclude '**/dist/**'"
   },
   "dependencies": {
-    "@aws-sdk/client-bedrock-runtime": "^3.1136.0",
-    "@aws-sdk/client-ses": "^3.1136.0",
-    "@aws-sdk/lib-dynamodb": "^3.1136.0",
+    "@aws-sdk/client-bedrock-runtime": "3.1136.0",
+    "@aws-sdk/client-ses": "3.1136.0",
+    "@aws-sdk/lib-dynamodb": "3.1136.0",
     "@bubltec/mycota-config": "workspace:*",
     "@bubltec/mycota-dynamo": "workspace:*",
     "@bubltec/mycota-mail": "workspace:*",
-    "passport-github2": "^0.1.12",
-    "passport-google-oauth20": "^2.0.0"
+    "passport-github2": "0.1.12",
+    "passport-google-oauth20": "2.0.0"
   },
   "devDependencies": {
     "@fastify/cookie": "11.1.2",

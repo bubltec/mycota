@@ -80,7 +80,7 @@ Internal dependencies flow one way and never form a cycle: `auth` → `config`, 
 *   Peer ranges list only the majors that are actually tested (currently `@nestjs/* ^12`, `class-validator ^0.15`). Widening a range requires testing it.
 *   Prefer an injected client over an SDK dependency. Where a package genuinely needs an SDK (`auth`, `dynamo`, `config`), it is an ordinary dependency.
 *   Check for updates against the registry (`pnpm outdated -r`) and upgrade deliberately, then run the full check (section 6).
-*   **Exact pins for tooling.** `save-exact` is on, so `pnpm add` records `1.2.3`, not `^1.2.3`, and every `devDependency` is pinned exactly. Published `dependencies` and `peerDependencies` stay ranges on purpose: an exact runtime pin in a published library forces consumers to install a second copy.
+*   **Exact pins everywhere except peers.** `save-exact` is on, so `pnpm add` records `1.2.3`, not `^1.2.3`, and every `dependency` and `devDependency` is pinned exactly. `peerDependencies` stay ranges because they declare what a consumer may supply. Tradeoff to know about: an exact runtime pin in a published package means a consumer on a different patch of that library may install a second copy.
 *   `save-exact` is set in **both** `.npmrc` and `saveExact: true` in `pnpm-workspace.yaml`. pnpm 11 ignores `.npmrc` for this setting (tested: it still writes `^`), so the workspace file is the one that takes effect for pnpm; `.npmrc` covers npm and older pnpm.
 *   CI reads the Node version from `.nvmrc` (`node-version-file`). Change it in one place.
 
