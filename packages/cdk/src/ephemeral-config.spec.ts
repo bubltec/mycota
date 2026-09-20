@@ -3,6 +3,14 @@ import { App, Stack } from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import { EphemeralConfig } from './ephemeral-config.js';
 
+// vitest 5 requires vi.hoisted/vi.mock at module top level.
+const { cloneSsmNamespace, deleteSsmNamespace } = vi.hoisted(() => ({
+  cloneSsmNamespace: vi.fn().mockResolvedValue(['/myapp/pr-123/jwt-secret']),
+  deleteSsmNamespace: vi.fn().mockResolvedValue(['/myapp/pr-123/jwt-secret']),
+}));
+
+vi.mock('@bubltec/mycota-config', () => ({ cloneSsmNamespace, deleteSsmNamespace }));
+
 describe('EphemeralConfig (synth)', () => {
   it('wires a Lambda-backed custom resource scoped to source and target env paths', () => {
     const app = new App();
@@ -49,13 +57,6 @@ describe('EphemeralConfig (synth)', () => {
 });
 
 describe('EphemeralConfig handler logic', () => {
-  const { cloneSsmNamespace, deleteSsmNamespace } = vi.hoisted(() => ({
-    cloneSsmNamespace: vi.fn().mockResolvedValue(['/myapp/pr-123/jwt-secret']),
-    deleteSsmNamespace: vi.fn().mockResolvedValue(['/myapp/pr-123/jwt-secret']),
-  }));
-
-  vi.mock('@bubltec/mycota-config', () => ({ cloneSsmNamespace, deleteSsmNamespace }));
-
   const resourceProperties = { Namespace: 'myapp', SourceEnv: 'dev', TargetEnv: 'pr-123' };
 
   it('clones source -> target on Create', async () => {

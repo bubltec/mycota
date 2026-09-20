@@ -180,6 +180,16 @@ Because `@bubltec/mycota-auth`'s internal deps (`@bubltec/mycota-config`,
 `@bubltec/mycota-auth` alone pulls them in transitively — no workspace
 linking, no submodule, no manual build step required.
 
+The framework itself is **not** bundled. `@bubltec/mycota-auth`,
+`@bubltec/mycota-dynamo` and `@bubltec/mycota-professional-verification` declare
+NestJS 12 (`@nestjs/common`, `@nestjs/core`, `@nestjs/jwt`, `@nestjs/passport`),
+`class-validator` ^0.15, `class-transformer`, `passport`, `reflect-metadata` and `rxjs`
+as **peer dependencies**, so your app owns exactly one copy. Two copies would break DI
+and make `class-validator` decorators register into a store your `ValidationPipe`
+never reads. pnpm and npm 7+ install peers automatically; if you pin your own
+versions, keep them within the ranges above. Built and tested on Node 26 with
+TypeScript 7 (`"types": ["node"]` must be set explicitly in your tsconfig under TS 7).
+
 To pick up a newer build later, re-run `pnpm add <pkg>` (or `<pkg>@next`)
 — npm/pnpm dependency versions are pinned at install time, not
 auto-updating, so this is a deliberate "pull latest" action, not a

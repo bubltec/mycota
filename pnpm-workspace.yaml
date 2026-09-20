@@ -5,3 +5,12 @@ allowBuilds:
   esbuild: true
   '@bubltec/mycota-config': true
   '@bubltec/mycota-cdk': true
+# Install native optional deps (rollup, oxlint, esbuild) for both Mac arches so
+# a Rosetta Node and an arm64 Node can share the same node_modules. Without
+# this, whichever arch the first install ran on is the only one that works.
+supportedArchitectures:
+  os:
+    - current
+  cpu:
+    - arm64
+    - x64

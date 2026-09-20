@@ -24,16 +24,16 @@
     "prepare": "pnpm run build",
     "typecheck": "tsc -b --noEmit",
     "lint": "oxlint -c ../../.oxlintrc.json src",
-    "test": "vitest run"
+    "test": "vitest run --exclude '**/dist/**'"
   },
   "dependencies": {
-    "@aws-sdk/client-ssm": "^3.716.0"
+    "@aws-sdk/client-ssm": "^3.1136.0"
   },
   "devDependencies": {
-    "@types/node": "^22.10.0",
+    "@types/node": "^26.6.2",
     "aws-sdk-client-mock": "^4.1.0",
-    "typescript": "^5.8.0",
-    "vitest": "^2.1.0"
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.1"
   },
   "repository": {
     "type": "git",
