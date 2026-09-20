@@ -7,6 +7,8 @@ on:
     branches: [main]
     paths:
       - 'packages/**'
+      # A markdown file inside a package is documentation, not a release.
+      - '!packages/**/*.md'
       - 'turbo.json'
       - 'tsconfig.base.json'
       - 'pnpm-lock.yaml'
@@ -25,7 +27,35 @@ on:
           - next
 
 jobs:
+  # A docs-only pull request (markdown, Cursor rules, agent files) cannot affect the
+  # build, so the heavy `check` job is skipped. Done per job rather than with
+  # `paths-ignore` on the workflow: a skipped job reports success, while a workflow that
+  # never starts leaves a required `check` status pending forever. Pushes and manual
+  # runs always run `check` (the `publish` job needs it).
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: filter
+        run: |
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if git diff --name-only "${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}" \
+            | grep -qvE '\.(md|mdc)$|^\.cursor/|^\.github/CODEOWNERS$|^LICENSE$'; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "code=false" >> "$GITHUB_OUTPUT"
+          fi
+
   check:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
