@@ -20,21 +20,24 @@
     "build": "tsc -b",
     "typecheck": "tsc -b --noEmit",
     "lint": "oxlint -c ../../.oxlintrc.json src",
-    "test": "vitest run"
+    "test": "vitest run --exclude '**/dist/**'"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.716.0",
-    "@aws-sdk/lib-dynamodb": "^3.716.0",
-    "@nestjs/common": "^10.4.0"
+    "@aws-sdk/client-dynamodb": "3.1136.0",
+    "@aws-sdk/lib-dynamodb": "3.1136.0"
   },
   "devDependencies": {
-    "@types/node": "^22.10.0",
-    "typescript": "^5.8.0",
-    "vitest": "^2.1.0"
+    "@nestjs/common": "12.0.3",
+    "@types/node": "26.6.2",
+    "typescript": "7.0.2",
+    "vitest": "5.0.1"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/bubltec/mycota",
     "directory": "packages/dynamo"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^12.0.0"
   }
 }

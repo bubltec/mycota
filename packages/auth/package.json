@@ -20,39 +20,50 @@
     "build": "tsc -b",
     "typecheck": "tsc -b --noEmit",
     "lint": "oxlint -c ../../.oxlintrc.json src",
-    "test": "vitest run"
+    "test": "vitest run --exclude '**/dist/**'"
   },
   "dependencies": {
-    "@aws-sdk/client-bedrock-runtime": "^3.716.0",
-    "@aws-sdk/client-ses": "^3.716.0",
-    "@aws-sdk/lib-dynamodb": "^3.716.0",
+    "@aws-sdk/client-bedrock-runtime": "3.1136.0",
+    "@aws-sdk/client-ses": "3.1136.0",
+    "@aws-sdk/lib-dynamodb": "3.1136.0",
     "@bubltec/mycota-config": "workspace:*",
     "@bubltec/mycota-dynamo": "workspace:*",
     "@bubltec/mycota-mail": "workspace:*",
-    "@nestjs/common": "^10.4.0",
-    "@nestjs/core": "^10.4.0",
-    "@nestjs/jwt": "^10.2.0",
-    "@nestjs/passport": "^10.0.3",
-    "class-transformer": "^0.5.1",
-    "class-validator": "^0.14.1",
-    "passport": "^0.7.0",
-    "passport-github2": "^0.1.12",
-    "passport-google-oauth20": "^2.0.0",
-    "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "passport-github2": "0.1.12",
+    "passport-google-oauth20": "2.0.0"
   },
   "devDependencies": {
-    "@fastify/cookie": "^9.4.0",
-    "@types/node": "^22.10.0",
-    "@types/passport-github2": "^1.2.9",
-    "@types/passport-google-oauth20": "^2.0.16",
-    "fastify": "^4.28.1",
-    "typescript": "^5.8.0",
-    "vitest": "^2.1.0"
+    "@fastify/cookie": "11.1.2",
+    "@nestjs/common": "12.0.3",
+    "@nestjs/core": "12.0.3",
+    "@nestjs/jwt": "12.0.2",
+    "@nestjs/passport": "12.0.0",
+    "@types/node": "26.6.2",
+    "@types/passport-github2": "1.2.9",
+    "@types/passport-google-oauth20": "2.0.17",
+    "class-transformer": "0.5.1",
+    "class-validator": "0.15.1",
+    "fastify": "5.12.5",
+    "passport": "0.7.0",
+    "reflect-metadata": "0.2.2",
+    "rxjs": "7.8.2",
+    "typescript": "7.0.2",
+    "vitest": "5.0.1"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/bubltec/mycota",
     "directory": "packages/auth"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^12.0.0",
+    "@nestjs/core": "^12.0.0",
+    "@nestjs/jwt": "^12.0.0",
+    "@nestjs/passport": "^12.0.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.0",
+    "passport": "^0.7.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.0"
   }
 }

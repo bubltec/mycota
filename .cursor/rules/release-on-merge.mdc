@@ -1,0 +1,51 @@
+---
+description: Merging to main publishes @bubltec/mycota-* to npm; how the version bump is chosen and what that means for agents
+alwaysApply: true
+---
+
+# Merging to `main` publishes to npm
+
+Every relevant push to `main` (see `.github/workflows/ci.yml`) publishes **all**
+`@bubltec/mycota-*` packages. Merging is releasing to a public registry, and a
+published version cannot be reused.
+
+- Real releases land on the `latest` dist-tag, plus a `vX.Y.Z` git tag and a
+  GitHub Release.
+- Opt-in `#next` pushes publish a rolling prerelease to the `next` dist-tag only,
+  with no git tag or GitHub Release.
+
+## How the bump is chosen (first match wins)
+
+1. The `workflow_dispatch` input, when a release is cut manually from `main`.
+2. An explicit `#major`, `#minor`, `#patch` or `#next` in the commit message.
+3. A conventional-commit prefix on the subject: `feat!:` is major, `feat:` is
+   minor, `fix:` is patch.
+4. Otherwise patch.
+
+Put the marker in the **PR title**, because that becomes the squash-merge commit
+subject verbatim.
+
+The CI step reads the **whole** commit message on `main` (`git log -1 --format=%B`),
+not just the subject, and looks for the markers as standalone words. Precedence is
+major, then minor, then patch, then next. So a `#major` written anywhere in the squash
+body, including inside pasted commit messages, also triggers a major release. Do not
+write those tokens in commit or PR bodies unless you mean them.
+
+To cut a **major** release, put `#major` (or use `feat!:`) in the PR title, for example
+`feat!: upgrade to NestJS 12 #major`. From 0.6.0 that produces 1.0.0.
+
+## What this means when working here
+
+- **Never push to `main` or merge a PR without the user's explicit go-ahead.**
+- Pick the bump deliberately. Under the 0.x scheme, breaking changes are normally
+  a minor bump. Use `#major` or `feat!:` only if a 1.0.0 is intended.
+- `version` in every `package.json` is a permanent `0.0.0` placeholder. CI computes
+  the real version from git tags, so never bump it by hand.
+- If `origin/main` moved, a newer version likely already exists on npm. Check with
+  `npm view @bubltec/mycota-auth dist-tags`.
+- Consumers pull releases with an exact version pin (btfp does this through
+  `scripts/mycota-pull.sh`), so a bad release reaches them only when they choose to
+  update.
+- Publishing uses npm Trusted Publishing (GitHub OIDC), so the publish job needs
+  `id-token: write` and every package must be registered as a trusted publisher.
+  See `mycota-solution-architecture` for the new-package checklist.
