@@ -23,7 +23,11 @@ export interface BuildMycotaAuthConfigFromSsmOptions {
  * users-table-name, email-from-address, session-cookie-name, stage,
  * aws-region, bedrock-inference-profile-id, brave-search-api-key,
  * github-client-id, github-client-secret, github-callback-url,
- * google-client-id, google-client-secret, google-callback-url.
+ * google-client-id, google-client-secret, google-callback-url,
+ * apple-client-id, apple-team-id, apple-key-id, apple-private-key, apple-callback-url,
+ * facebook-client-id, facebook-client-secret, facebook-callback-url,
+ * microsoft-client-id, microsoft-client-secret, microsoft-callback-url, microsoft-tenant,
+ * app-name.
  *
  * Required MycotaAuthConfig fields fall back to obviously-fake generic
  * placeholders when missing (e.g. an ephemeral stack that hasn't been
@@ -59,6 +63,34 @@ export async function buildMycotaAuthConfigFromSsm(
         }
       : undefined;
 
+  const apple =
+    ssm['apple-client-id'] && ssm['apple-private-key']
+      ? {
+          clientId: ssm['apple-client-id'],
+          teamId: ssm['apple-team-id'] ?? '',
+          keyId: ssm['apple-key-id'] ?? '',
+          privateKey: ssm['apple-private-key'],
+          callbackUrl: ssm['apple-callback-url'] ?? '',
+        }
+      : undefined;
+
+  const facebook = ssm['facebook-client-id']
+    ? {
+        clientId: ssm['facebook-client-id'],
+        clientSecret: ssm['facebook-client-secret'] ?? '',
+        callbackUrl: ssm['facebook-callback-url'] ?? '',
+      }
+    : undefined;
+
+  const microsoft = ssm['microsoft-client-id']
+    ? {
+        clientId: ssm['microsoft-client-id'],
+        clientSecret: ssm['microsoft-client-secret'] ?? '',
+        callbackUrl: ssm['microsoft-callback-url'] ?? '',
+        tenant: ssm['microsoft-tenant'],
+      }
+    : undefined;
+
   const config: MycotaAuthConfig = {
     jwtSecret: ssm['jwt-secret'] ?? 'change-me-in-local-env',
     webOrigin: ssm['web-origin'] ?? 'http://localhost:5173',
@@ -71,6 +103,10 @@ export async function buildMycotaAuthConfigFromSsm(
     braveSearchApiKey: ssm['brave-search-api-key'],
     github,
     google,
+    apple,
+    facebook,
+    microsoft,
+    appName: ssm['app-name'],
   };
 
   return { ...config, ...options.overrides };

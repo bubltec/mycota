@@ -139,6 +139,46 @@ export class UsersService {
     return user;
   }
 
+  /**
+   * Passwordless sign-in (email or phone one-time code). Email reuses the
+   * `email` provider key, so it is the same identity as the org-email flow.
+   */
+  async findOrCreateByIdentifier(provider: 'email' | 'phone', providerAccountId: string): Promise<User> {
+    const existing = await this.getByProviderAccount(provider, providerAccountId);
+    if (existing) return existing;
+
+    const user: User = {
+      id: randomUUID(),
+      provider,
+      providerAccountId,
+      displayName:
+        provider === 'email'
+          ? (providerAccountId.split('@')[0] ?? providerAccountId)
+          : `•••• ${providerAccountId.slice(-4)}`,
+      ...(provider === 'email' ? { email: providerAccountId } : {}),
+      verifiedContributor: false,
+      createdAt: new Date().toISOString(),
+    };
+
+    try {
+      await this.db.send(
+        new PutCommand({
+          TableName: this.usersTableName,
+          Item: { ...user, PK: this.pk(provider, providerAccountId), GSI1PK: `USERID#${user.id}` },
+          // Two simultaneous first sign-ins must not mint two ids for one identity.
+          ConditionExpression: 'attribute_not_exists(PK)',
+        }),
+      );
+    } catch (err) {
+      if ((err as { name?: string }).name === 'ConditionalCheckFailedException') {
+        const winner = await this.getByProviderAccount(provider, providerAccountId);
+        if (winner) return winner;
+      }
+      throw err;
+    }
+    return user;
+  }
+
   async markVerified(provider: string, providerAccountId: string): Promise<void> {
     await this.db.send(
       new UpdateCommand({

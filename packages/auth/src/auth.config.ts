@@ -16,6 +16,17 @@ export interface MycotaAuthConfig {
   braveSearchApiKey?: string;
   github?: { clientId: string; clientSecret: string; callbackUrl: string };
   google?: { clientId: string; clientSecret: string; callbackUrl: string };
+  /**
+   * Sign in with Apple. `clientId` is the Services ID. `privateKey` is the
+   * contents of the .p8 key (PEM). The callback is a cross-site POST
+   * (`response_mode=form_post`), so the app must register `@fastify/formbody`.
+   */
+  apple?: { clientId: string; teamId: string; keyId: string; privateKey: string; callbackUrl: string };
+  facebook?: { clientId: string; clientSecret: string; callbackUrl: string };
+  /** `tenant` defaults to `common` (work, school and personal accounts). */
+  microsoft?: { clientId: string; clientSecret: string; callbackUrl: string; tenant?: string };
+  /** Shown in OTP messages, e.g. "grtzplz". Defaults to a generic message. */
+  appName?: string;
 }
 
 export const MYCOTA_AUTH_CONFIG = Symbol('MYCOTA_AUTH_CONFIG');

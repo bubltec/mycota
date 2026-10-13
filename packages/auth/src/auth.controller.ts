@@ -10,6 +10,7 @@ import {
   Req,
   Res,
   UnauthorizedException,
+  SetMetadata,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -23,6 +24,10 @@ import { MYCOTA_AUTH_CONFIG, type MycotaAuthConfig } from './auth.config.js';
 import type { AuthenticatedUser, OAuthProfile } from './auth.types.js';
 import { RequestEmailSignInDto } from './dto/request-email-sign-in.dto.js';
 import { ConfirmEmailSignInDto } from './dto/confirm-email-sign-in.dto.js';
+import { RequestOtpDto } from './dto/request-otp.dto.js';
+import { ConfirmOtpDto } from './dto/confirm-otp.dto.js';
+import { OtpService } from './otp.service.js';
+import { PROVIDER_KEY, ProviderEnabledGuard } from './provider-enabled.guard.js';
 
 @Controller('auth')
 export class AuthController {
@@ -30,6 +35,7 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly users: UsersService,
     private readonly emailCode: EmailCodeService,
+    private readonly otp: OtpService,
     @Inject(MYCOTA_AUTH_CONFIG) private readonly config: MycotaAuthConfig,
   ) {}
 
@@ -51,6 +57,86 @@ export class AuthController {
   @UseGuards(AuthGuard('google'))
   async googleCallback(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
     await this.completeOAuthLogin(req, res);
+  }
+
+  @Get('apple')
+  @SetMetadata(PROVIDER_KEY, 'apple')
+  @UseGuards(ProviderEnabledGuard, AuthGuard('apple'))
+  appleLogin(): void {}
+
+  /** Apple posts the result back cross-site (`form_post`); the app must register `@fastify/formbody`. */
+  @Post('apple/callback')
+  @SetMetadata(PROVIDER_KEY, 'apple')
+  @UseGuards(ProviderEnabledGuard, AuthGuard('apple'))
+  async appleCallback(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
+    await this.completeOAuthLogin(req, res);
+  }
+
+  @Get('facebook')
+  @SetMetadata(PROVIDER_KEY, 'facebook')
+  @UseGuards(ProviderEnabledGuard, AuthGuard('facebook'))
+  facebookLogin(): void {}
+
+  @Get('facebook/callback')
+  @SetMetadata(PROVIDER_KEY, 'facebook')
+  @UseGuards(ProviderEnabledGuard, AuthGuard('facebook'))
+  async facebookCallback(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
+    await this.completeOAuthLogin(req, res);
+  }
+
+  @Get('microsoft')
+  @SetMetadata(PROVIDER_KEY, 'microsoft')
+  @UseGuards(ProviderEnabledGuard, AuthGuard('microsoft'))
+  microsoftLogin(): void {}
+
+  @Get('microsoft/callback')
+  @SetMetadata(PROVIDER_KEY, 'microsoft')
+  @UseGuards(ProviderEnabledGuard, AuthGuard('microsoft'))
+  async microsoftCallback(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
+    await this.completeOAuthLogin(req, res);
+  }
+
+  /** Which sign-in methods this deployment offers, so the UI renders only working buttons. */
+  @Get('providers')
+  providers() {
+    return {
+      github: !!this.config.github,
+      google: !!this.config.google,
+      apple: !!this.config.apple,
+      facebook: !!this.config.facebook,
+      microsoft: !!this.config.microsoft,
+      email: true,
+      phone: this.otp.phoneEnabled,
+    };
+  }
+
+  /**
+   * Passwordless sign-in/sign-up by one-time code over email or SMS. Works
+   * for any address (no organizational-email screening), and is the same
+   * flow for new and returning users.
+   */
+  @Post('otp/request')
+  async requestOtp(@Body() dto: RequestOtpDto) {
+    await this.otp.request(dto.channel, dto.identifier);
+    return { sent: true };
+  }
+
+  @Post('otp/confirm')
+  async confirmOtp(@Body() dto: ConfirmOtpDto, @Res() res: FastifyReply) {
+    const identity = await this.otp.confirm(dto.channel, dto.identifier, dto.code);
+    if (!identity) throw new UnauthorizedException('Invalid or expired code');
+    const user = await this.users.findOrCreateByIdentifier(identity.channel, identity.identifier);
+    this.setSessionCookie(res, this.authService.issueSessionToken(user));
+    res.send({ confirmed: true });
+  }
+
+  /** E2E only. 404s unless the configured stage is explicitly `local` or `test`. */
+  @Get('otp/test-code')
+  async getOtpTestCode(@Query('channel') channel?: string, @Query('identifier') identifier?: string) {
+    if ((channel !== 'email' && channel !== 'phone') || !identifier) throw new BadRequestException('channel and identifier required');
+    const code = await this.otp.getTestCode(channel, identifier);
+    if (!code) throw new NotFoundException();
+    return { code };
   }
 
   /**

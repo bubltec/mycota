@@ -1,6 +1,6 @@
 # mycota
 
-Reusable NestJS core, extracted from [badthingsforpets.com](https://github.com/bubltec/btfp): auth (GitHub/Google OAuth + standalone work-email sign-in), organizational-email professional verification, a DynamoDB client module, and SSM-backed configuration management. No `process.env` reads inside `@bubltec/mycota-auth` or `@bubltec/mycota-config` — everything is passed in explicitly, so a consuming app supplies its own secrets/table names/callback URLs instead of inheriting anyone else's.
+Reusable NestJS core, extracted from [badthingsforpets.com](https://github.com/bubltec/btfp): auth (GitHub/Google/Apple/Facebook/Microsoft OAuth, passwordless email/SMS one-time codes, standalone work-email sign-in), organizational-email professional verification, a DynamoDB client module, and SSM-backed configuration management. No `process.env` reads inside `@bubltec/mycota-auth` or `@bubltec/mycota-config` — everything is passed in explicitly, so a consuming app supplies its own secrets/table names/callback URLs instead of inheriting anyone else's.
 
 A pnpm + turbo monorepo (same shape as btfp itself), so each concern is its own versionable package instead of one flat bundle — a project that only wants `dynamo` isn't forced to pull in passport/bedrock/ses too, and there's room to add more packages as the framework's reach grows.
 
@@ -8,7 +8,7 @@ A pnpm + turbo monorepo (same shape as btfp itself), so each concern is its own 
 
 - **`packages/dynamo`** → `@bubltec/mycota-dynamo` — `DynamoModule` (global, points at DynamoDB Local when `DYNAMODB_ENDPOINT` is set), `DYNAMO_DOC_CLIENT`, `stripDynamoKeys`. No internal dependencies.
 - **`packages/config`** → `@bubltec/mycota-config` — SSM Parameter Store-backed configuration, namespaced by app and environment. No internal dependencies. See below.
-- **`packages/auth`** → `@bubltec/mycota-auth` — `MycotaAuthModule.forRootAsync({ useFactory })`, `JwtAuthGuard`, `VerifiedGuard`, `CurrentUser`, `UsersService`, `EmailCodeService`, plus the SSM convenience `buildMycotaAuthConfigFromSsm`. Depends on `@bubltec/mycota-dynamo`, `@bubltec/mycota-config`, and `@bubltec/mycota-mail`.
+- **`packages/auth`** → `@bubltec/mycota-auth` — `MycotaAuthModule.forRootAsync({ useFactory })`, `OtpService`, `enablePassportFastifyCompat`, `JwtAuthGuard`, `VerifiedGuard`, `CurrentUser`, `UsersService`, `EmailCodeService`, plus the SSM convenience `buildMycotaAuthConfigFromSsm`. Depends on `@bubltec/mycota-dynamo`, `@bubltec/mycota-config`, `@bubltec/mycota-mail`, and `@bubltec/mycota-sms`.
 - **`packages/professional-verification`** → `@bubltec/mycota-professional-verification` — request/confirm/review workflow for "prove you belong to an organization," built on `@bubltec/mycota-auth`'s email-code flow. Depends on `@bubltec/mycota-auth`.
 - **`packages/cdk`** → `@bubltec/mycota-cdk` — CDK constructs: `grantSsmConfigRead`, `EphemeralConfig`, `MediaBucket` (private S3 + CloudFront OAC), `JobQueue` (SQS + DLQ + EventBridge Scheduler group), `PostgresInstance` (RDS Postgres 16; app brings the VPC), `SesDomain` (verified sending identity + Easy DKIM + MAIL FROM), and `GithubActionsDeployRole` (GitHub OIDC assume-role for `cdk deploy`). Depends on `@bubltec/mycota-config`; `aws-cdk-lib`/`constructs` are peer dependencies (bring your own pinned CDK version). See below.
 - **`packages/payments`** → `@bubltec/mycota-payments` — `PaymentGateway` port, `FakePaymentGateway` for local/tests, and a `StripePaymentGateway` that destination-charges Stripe Connect accounts. `ConnectOnboarding` + `FakeConnectOnboarding` / `StripeConnectOnboarding` for Express account KYC (refresh/return URLs). Refunds reverse the application fee by default. No Nest, no `stripe` SDK dependency — the consuming app passes a Stripe-shaped client in.
@@ -19,6 +19,44 @@ A pnpm + turbo monorepo (same shape as btfp itself), so each concern is its own 
 - **`packages/postgres`** → `@bubltec/mycota-postgres` — `SqlDatabase` over an injected `pg.Pool` (no `pg` dependency here). Nested `transaction` joins the open transaction. `applyMigrations` + `VECTOR_EXTENSION`. Product tables stay in the consuming app. Local Docker / RDS are the same adapter — there is no in-memory SQL fake.
 - **`packages/mail`** → `@bubltec/mycota-mail` — `Mailer` port, `FakeMailer` for local/tests, `SesMailer` over an injected SES-shaped client. Non-prod stages prefix subjects with `[stage]`. No AWS SDK dependency.
 - **`packages/sms`** → `@bubltec/mycota-sms` — `SmsSender` port, `FakeSmsSender` for local/tests, `SnsSmsSender` over an injected SNS-shaped client. Numbers are normalized to E.164. No AWS SDK dependency.
+
+## Sign-in methods (`@bubltec/mycota-auth`)
+
+| Method | Routes | Enabled by |
+| --- | --- | --- |
+| GitHub, Google | `GET /auth/{github,google}` + `/callback` | `config.github` / `config.google` |
+| Apple | `GET /auth/apple`, **`POST`** `/auth/apple/callback` | `config.apple` |
+| Facebook | `GET /auth/facebook` + `/callback` | `config.facebook` |
+| Microsoft | `GET /auth/microsoft` + `/callback` | `config.microsoft` |
+| Email or phone code | `POST /auth/otp/request`, `POST /auth/otp/confirm` | email always; phone when `smsSender` is passed |
+| Work email (verification) | `POST /auth/email/{request,confirm}` | always |
+
+`GET /auth/providers` returns which are on, so a UI can render only working buttons. A provider
+whose config block is absent has no strategy registered and its routes return 404.
+
+```ts
+MycotaAuthModule.forRootAsync({
+  useFactory: () => buildMycotaAuthConfigFromSsm({ namespace: 'myapp', env }),
+  // Optional. Email defaults to SES; phone is off unless an SmsSender is given.
+  smsSender: () => new SnsSmsSender(snsClient),
+});
+```
+
+**One-time codes** (`/auth/otp/*`) are passwordless sign-in *and* sign-up: the same flow for new and returning users, so
+neither response reveals whether an account exists. Unlike the work-email flow they accept any address (no domain screening,
+no classification). Codes are 6 digits, valid 10 minutes, stored as an HMAC (keyed with `jwtSecret`), single use, limited
+to 5 guesses (counted atomically, so parallel guesses can't dodge it), one send per minute and 5 per hour per address.
+Per-IP limits are the edge's job (WAF). Pending codes are `OTP#...` items in the users table with a `ttl` attribute;
+enable DynamoDB TTL on `ttl` to have them cleaned up. Email OTP users share the `email` provider key with the work-email flow.
+`GET /auth/otp/test-code` (for E2E) answers only when `config.stage` is explicitly `local` or `test`; an unset stage is treated as production.
+
+**Fastify.** Passport calls `res.setHeader`/`res.end`, which Fastify replies lack, so every OAuth login route 500s until you call
+`enablePassportFastifyCompat(app.getHttpAdapter().getInstance())` after registering `@fastify/cookie`. Apple posts its callback
+cross-site (`response_mode=form_post`), so also register `@fastify/formbody`.
+
+New SSM keys (`buildMycotaAuthConfigFromSsm`): `apple-{client-id,team-id,key-id,private-key,callback-url}`,
+`facebook-{client-id,client-secret,callback-url}`, `microsoft-{client-id,client-secret,callback-url,tenant}`, `app-name`.
+Accounts are keyed per provider; the same person signing in with two providers gets two users (no linking yet).
 
 ## Configuration management (`@bubltec/mycota-config`)
 
