@@ -1,7 +1,14 @@
-// 'email' isn't OAuth — it's the standalone organizational-email sign-in
+// 'email' and 'phone' aren't OAuth — it's the standalone organizational-email sign-in
 // path — kept in the same union since it's still "how this user proved who
 // they are."
-export type AuthProvider = 'github' | 'google' | 'email';
+export type AuthProvider =
+  | 'github'
+  | 'google'
+  | 'apple'
+  | 'facebook'
+  | 'microsoft'
+  | 'email'
+  | 'phone';
 
 export type ProfessionalStatus =
   | 'none'

@@ -19,3 +19,8 @@ supportedArchitectures:
   cpu:
     - arm64
     - x64
+# @nestjs/platform-fastify (dev-only, for the auth module smoke test) pins `fastify`
+# exactly; keep one copy so @fastify/cookie's type augmentation targets the same
+# FastifyReply the code imports. Same override as political-sloth.
+overrides:
+  fastify: 5.12.5
