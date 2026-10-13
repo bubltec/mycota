@@ -76,7 +76,7 @@ describe('MycotaAuthModule', () => {
     const { app } = await boot(baseConfig, false);
     current = app;
     const res = await app.inject({ method: 'GET', url: '/auth/providers' });
-    expect(res.json()).toEqual({ github: false, google: false, apple: false, facebook: false, microsoft: false, email: true, phone: false });
+    expect(res.json()).toEqual({ github: false, google: false, apple: false, facebook: false, microsoft: false, email: true, phone: false, anonymousEmail: false });
   });
 
   it('404s routes of unconfigured providers instead of a 500', async () => {

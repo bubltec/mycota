@@ -26,6 +26,7 @@ import { RequestEmailSignInDto } from './dto/request-email-sign-in.dto.js';
 import { ConfirmEmailSignInDto } from './dto/confirm-email-sign-in.dto.js';
 import { RequestOtpDto } from './dto/request-otp.dto.js';
 import { ConfirmOtpDto } from './dto/confirm-otp.dto.js';
+import { RequestAnonEmailDto, ConfirmAnonEmailDto } from './dto/anon-email.dto.js';
 import { OtpService } from './otp.service.js';
 import { PROVIDER_KEY, ProviderEnabledGuard } from './provider-enabled.guard.js';
 
@@ -107,6 +108,7 @@ export class AuthController {
       microsoft: !!this.config.microsoft,
       email: true,
       phone: this.otp.phoneEnabled,
+      anonymousEmail: this.otp.anonymousEmailEnabled,
     };
   }
 
@@ -128,6 +130,34 @@ export class AuthController {
     const user = await this.users.findOrCreateByIdentifier(identity.channel, identity.identifier);
     this.setSessionCookie(res, this.authService.issueSessionToken(user));
     res.send({ confirmed: true });
+  }
+
+  /**
+   * Anonymous sign-in/sign-up: the address is used to send the code and is
+   * never stored (only an HMAC of it is). Email travels in the body, never the
+   * URL, so it stays out of access logs.
+   */
+  @Post('anon-email/request')
+  async requestAnonymousEmail(@Body() dto: RequestAnonEmailDto) {
+    await this.otp.requestAnonymousEmail(dto.email);
+    return { sent: true };
+  }
+
+  @Post('anon-email/confirm')
+  async confirmAnonymousEmail(@Body() dto: ConfirmAnonEmailDto, @Res() res: FastifyReply) {
+    const identity = await this.otp.confirmAnonymousEmail(dto.email, dto.code);
+    if (!identity) throw new UnauthorizedException('Invalid or expired code');
+    const user = await this.users.findOrCreateByIdentifier('anon_email', identity.accountId);
+    this.setSessionCookie(res, this.authService.issueSessionToken(user));
+    res.send({ confirmed: true });
+  }
+
+  /** E2E only; same stage gating as `otp/test-code`. */
+  @Post('anon-email/test-code')
+  async getAnonymousEmailTestCode(@Body() dto: RequestAnonEmailDto) {
+    const code = await this.otp.getAnonymousTestCode(dto.email);
+    if (!code) throw new NotFoundException();
+    return { code };
   }
 
   /** E2E only. 404s unless the configured stage is explicitly `local` or `test`. */

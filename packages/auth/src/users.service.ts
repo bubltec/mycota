@@ -143,7 +143,7 @@ export class UsersService {
    * Passwordless sign-in (email or phone one-time code). Email reuses the
    * `email` provider key, so it is the same identity as the org-email flow.
    */
-  async findOrCreateByIdentifier(provider: 'email' | 'phone', providerAccountId: string): Promise<User> {
+  async findOrCreateByIdentifier(provider: 'email' | 'phone' | 'anon_email', providerAccountId: string): Promise<User> {
     const existing = await this.getByProviderAccount(provider, providerAccountId);
     if (existing) return existing;
 
@@ -154,7 +154,9 @@ export class UsersService {
       displayName:
         provider === 'email'
           ? (providerAccountId.split('@')[0] ?? providerAccountId)
-          : `•••• ${providerAccountId.slice(-4)}`,
+          : provider === 'anon_email'
+            ? 'Anonymous'
+            : `•••• ${providerAccountId.slice(-4)}`,
       ...(provider === 'email' ? { email: providerAccountId } : {}),
       verifiedContributor: false,
       createdAt: new Date().toISOString(),

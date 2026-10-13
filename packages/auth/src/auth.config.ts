@@ -25,6 +25,14 @@ export interface MycotaAuthConfig {
   facebook?: { clientId: string; clientSecret: string; callbackUrl: string };
   /** `tenant` defaults to `common` (work, school and personal accounts). */
   microsoft?: { clientId: string; clientSecret: string; callbackUrl: string; tenant?: string };
+  /**
+   * Enables anonymous email sign-in (`/auth/anon-email/*`). The address is used
+   * only to send the code and is stored only as an HMAC keyed with this pepper.
+   * Keep the pepper in a secret store, apart from the database, and never lose
+   * or change it: every anonymous account is addressed by hashes made with it.
+   * At least 32 characters, and different from `jwtSecret`.
+   */
+  anonymousEmail?: { pepper: string };
   /** Shown in OTP messages, e.g. "grtzplz". Defaults to a generic message. */
   appName?: string;
 }
