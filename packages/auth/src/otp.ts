@@ -29,7 +29,7 @@ export function generateCode(): string {
 }
 
 /** HMAC rather than a bare hash: a 6-digit code is trivially brute-forced from an unkeyed hash. */
-export function hashCode(secret: string, channel: OtpChannel, identifier: string, code: string): string {
+export function hashCode(secret: string, channel: string, identifier: string, code: string): string {
   return createHmac('sha256', secret).update(`${channel}\n${identifier}\n${code}`).digest('hex');
 }
 
@@ -41,4 +41,22 @@ export function safeEqualHex(a: string, b: string): boolean {
 
 export function maskPhone(e164: string): string {
   return `•••• ${e164.slice(-4)}`;
+}
+
+/** Store/hash label for the anonymous-email flow, kept apart from the ordinary `email` channel. */
+export const ANON_EMAIL_CHANNEL = 'email-anon';
+export const ANON_PEPPER_MIN_LENGTH = 32;
+
+/**
+ * The only form in which an anonymous account's email is ever stored: a keyed
+ * hash. A plain hash would not do, because email addresses are guessable and an
+ * unkeyed hash could be reversed from a leaked database by trying likely
+ * addresses. The `pepper` is a secret held outside the database (SSM), so the
+ * data alone is not enough to test a guess.
+ *
+ * The `v1:` prefix leaves room to rotate the pepper later without ambiguity.
+ * `email` must already be normalized (lowercase, trimmed).
+ */
+export function hashAnonymousEmail(pepper: string, email: string): string {
+  return `v1:${createHmac('sha256', pepper).update(`mycota:anon-email:v1\n${email}`).digest('hex')}`;
 }

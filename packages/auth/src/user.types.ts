@@ -8,7 +8,9 @@ export type AuthProvider =
   | 'facebook'
   | 'microsoft'
   | 'email'
-  | 'phone';
+  | 'phone'
+  /** Email-code sign-in where the address is never stored; `providerAccountId` is a keyed hash. */
+  | 'anon_email';
 
 export type ProfessionalStatus =
   | 'none'

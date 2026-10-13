@@ -27,7 +27,7 @@ export interface BuildMycotaAuthConfigFromSsmOptions {
  * apple-client-id, apple-team-id, apple-key-id, apple-private-key, apple-callback-url,
  * facebook-client-id, facebook-client-secret, facebook-callback-url,
  * microsoft-client-id, microsoft-client-secret, microsoft-callback-url, microsoft-tenant,
- * app-name.
+ * anon-email-pepper, app-name.
  *
  * Required MycotaAuthConfig fields fall back to obviously-fake generic
  * placeholders when missing (e.g. an ephemeral stack that hasn't been
@@ -106,6 +106,7 @@ export async function buildMycotaAuthConfigFromSsm(
     apple,
     facebook,
     microsoft,
+    anonymousEmail: ssm['anon-email-pepper'] ? { pepper: ssm['anon-email-pepper'] } : undefined,
     appName: ssm['app-name'],
   };
 

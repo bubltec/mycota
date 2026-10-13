@@ -29,6 +29,7 @@ A pnpm + turbo monorepo (same shape as btfp itself), so each concern is its own 
 | Facebook | `GET /auth/facebook` + `/callback` | `config.facebook` |
 | Microsoft | `GET /auth/microsoft` + `/callback` | `config.microsoft` |
 | Email or phone code | `POST /auth/otp/request`, `POST /auth/otp/confirm` | email always; phone when `smsSender` is passed |
+| Anonymous email code | `POST /auth/anon-email/{request,confirm}` | `config.anonymousEmail.pepper` |
 | Work email (verification) | `POST /auth/email/{request,confirm}` | always |
 
 `GET /auth/providers` returns which are on, so a UI can render only working buttons. A provider
@@ -55,8 +56,30 @@ enable DynamoDB TTL on `ttl` to have them cleaned up. Email OTP users share the 
 as a form (`response_mode=form_post`); Nest's Fastify adapter already parses urlencoded bodies, so
 registering `@fastify/formbody` as well fails with "content type parser already present".
 
+**Anonymous email** (`/auth/anon-email/*`) is the same emailed-code flow, for apps that want an account
+that holds no personal data. The address is used to send the code and is then gone: the pending code,
+its rate-limit counters, and the account are all keyed by `v1:` + `HMAC-SHA256(pepper, email)`. The user
+record has no `email`, `provider: 'anon_email'`, and display name "Anonymous". The email travels in the
+request body, never the URL, and mail-provider errors (which often quote the recipient) are logged by
+class only and returned as a generic 502.
+
+What this does and does not promise:
+
+- **A leaked database does not reveal addresses, and cannot be tested against guesses without the pepper.**
+  It has to be a *keyed* hash: addresses are guessable, so a plain SHA-256 could be reversed by trying
+  likely ones. Keep the pepper (32+ characters, different from `jwtSecret`) in a secret store, apart from
+  the database (`anon-email-pepper` in SSM). Whoever holds both can confirm a guess for a *known* address,
+  though not list the addresses.
+- **The address is still visible while the code is sent** (in memory, to your mail provider such as SES,
+  and in that provider's own logs or event streams if you enable them with recipients).
+- **There is no recovery.** Nobody, including you, can email the user later. Lose the inbox and the account
+  is unreachable; whoever controls the inbox controls the account.
+- **Never lose or change the pepper.** Every account is addressed by hashes made with it. The `v1:` prefix
+  leaves room for a rotation scheme, which does not exist yet.
+- This is a separate identity from the ordinary `email` provider: the same person using both has two accounts.
+
 New SSM keys (`buildMycotaAuthConfigFromSsm`): `apple-{client-id,team-id,key-id,private-key,callback-url}`,
-`facebook-{client-id,client-secret,callback-url}`, `microsoft-{client-id,client-secret,callback-url,tenant}`, `app-name`.
+`facebook-{client-id,client-secret,callback-url}`, `microsoft-{client-id,client-secret,callback-url,tenant}`, `anon-email-pepper`, `app-name`.
 Accounts are keyed per provider; the same person signing in with two providers gets two users (no linking yet).
 
 ## Configuration management (`@bubltec/mycota-config`)
