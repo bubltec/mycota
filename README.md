@@ -52,7 +52,8 @@ enable DynamoDB TTL on `ttl` to have them cleaned up. Email OTP users share the 
 
 **Fastify.** Passport calls `res.setHeader`/`res.end`, which Fastify replies lack, so every OAuth login route 500s until you call
 `enablePassportFastifyCompat(app.getHttpAdapter().getInstance())` after registering `@fastify/cookie`. Apple posts its callback
-cross-site (`response_mode=form_post`), so also register `@fastify/formbody`.
+as a form (`response_mode=form_post`); Nest's Fastify adapter already parses urlencoded bodies, so
+registering `@fastify/formbody` as well fails with "content type parser already present".
 
 New SSM keys (`buildMycotaAuthConfigFromSsm`): `apple-{client-id,team-id,key-id,private-key,callback-url}`,
 `facebook-{client-id,client-secret,callback-url}`, `microsoft-{client-id,client-secret,callback-url,tenant}`, `app-name`.
