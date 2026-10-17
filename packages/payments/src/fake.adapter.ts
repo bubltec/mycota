@@ -2,10 +2,12 @@ import { addMoney, money, type Money } from './money.js';
 import type {
   CheckoutSession,
   CreateCheckoutInput,
+  CustomerDetails,
   PaymentEvent,
   PaymentGateway,
   RefundInput,
   RefundResult,
+  ShippingDetails,
 } from './ports.js';
 
 export interface FakePaymentGatewayOptions {
@@ -20,6 +22,7 @@ export interface FakePaymentGatewayOptions {
 export class FakePaymentGateway implements PaymentGateway {
   readonly provider = 'fake';
   private readonly sessions = new Map<string, CreateCheckoutInput>();
+  private readonly refunds: RefundInput[] = [];
   private seq = 0;
 
   constructor(private readonly options: FakePaymentGatewayOptions = {}) {}
@@ -28,6 +31,13 @@ export class FakePaymentGateway implements PaymentGateway {
     if (input.lines.length === 0) {
       throw new Error('checkout requires at least one line');
     }
+    // The same rules as the real adapter, so a test catches a misuse that Stripe would refuse.
+    if (input.chargeMode === 'direct' && !input.connectedAccountId) {
+      throw new Error('a direct charge needs the connected account it is made on');
+    }
+    if (input.shippingRates?.length && !input.shippingAddress) {
+      throw new Error('shipping rates need shippingAddress: a buyer cannot pick a rate without giving an address');
+    }
     this.seq += 1;
     const id = `cs_fake_${this.seq}`;
     this.sessions.set(id, input);
@@ -35,6 +45,7 @@ export class FakePaymentGateway implements PaymentGateway {
   }
 
   async refund(input: RefundInput): Promise<RefundResult> {
+    this.refunds.push(input);
     return { id: `re_fake_${input.paymentId}`, status: 'succeeded' };
   }
 
@@ -49,21 +60,43 @@ export class FakePaymentGateway implements PaymentGateway {
       amountCents?: number;
       currency?: string;
       metadata?: Record<string, string>;
+      connectedAccountId?: string;
+      customer?: CustomerDetails;
+      shipping?: ShippingDetails;
     };
+    const account = body.connectedAccountId ? { connectedAccountId: body.connectedAccountId } : {};
     const paymentId = body.paymentId ?? '';
     const metadata = body.metadata ?? {};
     const amount: Money = money(body.amountCents ?? 0, body.currency ?? 'usd');
 
     if (body.type === 'checkout.completed') {
-      return { type: 'checkout.completed', paymentId, amount, metadata };
+      return {
+        type: 'checkout.completed',
+        paymentId,
+        amount,
+        metadata,
+        ...account,
+        ...(body.customer ? { customer: body.customer } : {}),
+        ...(body.shipping ? { shipping: body.shipping } : {}),
+      };
     }
     if (body.type === 'checkout.failed') {
-      return { type: 'checkout.failed', paymentId, metadata };
+      return { type: 'checkout.failed', paymentId, metadata, ...account };
     }
     if (body.type === 'charge.refunded') {
-      return { type: 'charge.refunded', paymentId, amount };
+      return { type: 'charge.refunded', paymentId, amount, ...account };
     }
     return null;
+  }
+
+  /** What was asked of a checkout, for tests to assert on. */
+  checkoutInput(id: string): CreateCheckoutInput | undefined {
+    return this.sessions.get(id);
+  }
+
+  /** Every refund asked for, in order. */
+  refundsRequested(): readonly RefundInput[] {
+    return this.refunds;
   }
 
   checkoutTotal(id: string): Money | undefined {

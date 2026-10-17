@@ -1,13 +1,18 @@
 export { addMoney, money, type Money } from './money.js';
 export type {
+  Address,
+  ChargeMode,
   CheckoutLine,
   CheckoutSession,
   CreateCheckoutInput,
+  CustomerDetails,
   PaymentEvent,
   PaymentGateway,
   PaymentGatewayConfig,
   RefundInput,
   RefundResult,
+  ShippingDetails,
+  ShippingRate,
 } from './ports.js';
 export { FakePaymentGateway, type FakePaymentGatewayOptions } from './fake.adapter.js';
 export {
