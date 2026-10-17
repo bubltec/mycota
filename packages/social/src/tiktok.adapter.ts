@@ -1,3 +1,4 @@
+import { createDefaultFetch } from './http.js';
 import { PLATFORM_CAPABILITIES } from './capabilities.js';
 import type {
   FetchLike,
@@ -33,7 +34,7 @@ export class TikTokSocialPublisher implements SocialPublisher {
   private readonly baseUrl: string;
 
   constructor(private readonly options: TikTokPublisherOptions) {
-    this.fetch = options.fetch ?? globalThis.fetch.bind(globalThis);
+    this.fetch = options.fetch ?? createDefaultFetch();
     this.baseUrl = options.baseUrl ?? 'https://open.tiktokapis.com/v2';
   }
 

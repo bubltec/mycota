@@ -1,3 +1,4 @@
+import { createDefaultFetch } from './http.js';
 import { PLATFORM_CAPABILITIES } from './capabilities.js';
 import type {
   FetchLike,
@@ -35,7 +36,7 @@ export class MetaSocialPublisher implements SocialPublisher {
     private readonly options: MetaPublisherOptions,
   ) {
     this.platform = platform;
-    this.fetch = options.fetch ?? globalThis.fetch.bind(globalThis);
+    this.fetch = options.fetch ?? createDefaultFetch();
     this.graphBaseUrl = options.graphBaseUrl ?? 'https://graph.facebook.com/v22.0';
   }
 

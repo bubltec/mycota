@@ -1,3 +1,4 @@
+import { hardenOAuth2 } from './oauth-http.js';
 import { Inject, Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-apple';
@@ -32,6 +33,7 @@ export class AppleStrategy extends PassportStrategy(Strategy, 'apple') {
       scope: ['name', 'email'],
       passReqToCallback: false,
     });
+    hardenOAuth2(this, config.network?.oauth);
   }
 
   // The id_token is read straight from the token-endpoint response (back

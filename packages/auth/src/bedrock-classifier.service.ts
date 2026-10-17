@@ -1,3 +1,4 @@
+import { awsClientDefaults } from './aws-client-defaults.js';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { BedrockRuntimeClient, ConverseCommand } from '@aws-sdk/client-bedrock-runtime';
 import { MYCOTA_AUTH_CONFIG, type MycotaAuthConfig } from './auth.config.js';
@@ -63,7 +64,13 @@ export class BedrockClassifierService {
   private readonly modelId: string;
 
   constructor(@Inject(MYCOTA_AUTH_CONFIG) config: MycotaAuthConfig) {
-    this.client = new BedrockRuntimeClient({ region: config.awsRegion ?? 'us-east-1' });
+    this.client = new BedrockRuntimeClient({
+      region: config.awsRegion ?? 'us-east-1',
+      ...awsClientDefaults(
+        { ...config.network?.aws, requestTimeoutMs: config.network?.aws?.bedrockRequestTimeoutMs ?? config.network?.aws?.requestTimeoutMs },
+        30_000,
+      ),
+    });
     this.modelId = config.bedrockInferenceProfileId ?? DEFAULT_MODEL_ID;
   }
 

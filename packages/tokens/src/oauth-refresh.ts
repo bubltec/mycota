@@ -1,3 +1,4 @@
+import { createDefaultFetch } from './http.js';
 import type { TokenRefresher, TokenSet } from './ports.js';
 
 export type FetchLike = (url: string, init?: RequestInit) => Promise<Response>;
@@ -28,7 +29,7 @@ export function metaTokenRefresher(
   config: OAuthAppConfig,
   options: { fetch?: FetchLike; graphBaseUrl?: string } = {},
 ): TokenRefresher {
-  const fetchFn = options.fetch ?? globalThis.fetch.bind(globalThis);
+  const fetchFn = options.fetch ?? createDefaultFetch();
   const base = options.graphBaseUrl ?? 'https://graph.facebook.com/v22.0';
   return {
     async refresh(tokens: TokenSet): Promise<TokenSet> {
@@ -52,7 +53,7 @@ export function tiktokTokenRefresher(
   config: OAuthAppConfig,
   options: { fetch?: FetchLike; tokenUrl?: string } = {},
 ): TokenRefresher {
-  const fetchFn = options.fetch ?? globalThis.fetch.bind(globalThis);
+  const fetchFn = options.fetch ?? createDefaultFetch();
   const tokenUrl = options.tokenUrl ?? 'https://open.tiktokapis.com/v2/oauth/token/';
   return {
     async refresh(tokens: TokenSet): Promise<TokenSet> {
@@ -83,7 +84,7 @@ export function xTokenRefresher(
   config: OAuthAppConfig,
   options: { fetch?: FetchLike; tokenUrl?: string } = {},
 ): TokenRefresher {
-  const fetchFn = options.fetch ?? globalThis.fetch.bind(globalThis);
+  const fetchFn = options.fetch ?? createDefaultFetch();
   const tokenUrl = options.tokenUrl ?? 'https://api.x.com/2/oauth2/token';
   const basic = Buffer.from(`${config.clientId}:${config.clientSecret}`).toString('base64');
   return {

@@ -1,3 +1,4 @@
+import { awsClientDefaults, type AwsClientSettings } from './aws-client-defaults.js';
 import {
   GetParametersByPathCommand,
   PutParameterCommand,
@@ -6,6 +7,8 @@ import {
 } from '@aws-sdk/client-ssm';
 
 export interface SsmConfigOptions {
+  /** Timeout and retry settings for the SSM client. */
+  aws?: AwsClientSettings;
   /** Top-level SSM prefix, e.g. 'btfp'. */
   namespace: string;
   /** Any string — 'dev', 'prod', 'pr-123', a branch name. Not a fixed enum, so ephemeral stacks need no code changes. */
@@ -72,7 +75,7 @@ async function listParametersUnderPath(client: SSMClient, path: string): Promise
  * placeholder) instead of crashing.
  */
 export async function loadSsmConfig(options: SsmConfigOptions): Promise<Record<string, string>> {
-  const client = new SSMClient({ region: resolveRegion(options.region) });
+  const client = new SSMClient({ region: resolveRegion(options.region), ...awsClientDefaults(options.aws) });
   const merged: Record<string, string> = {};
 
   if (options.includeShared ?? true) {
@@ -94,7 +97,7 @@ export async function pushSsmConfig(
   options: SsmConfigOptions,
   values: Record<string, string | undefined>,
 ): Promise<string[]> {
-  const client = new SSMClient({ region: resolveRegion(options.region) });
+  const client = new SSMClient({ region: resolveRegion(options.region), ...awsClientDefaults(options.aws) });
   const written: string[] = [];
 
   for (const [key, value] of Object.entries(values)) {
@@ -109,6 +112,8 @@ export async function pushSsmConfig(
 }
 
 export interface CloneSsmNamespaceOptions {
+  /** Timeout and retry settings for the SSM client. */
+  aws?: AwsClientSettings;
   namespace: string;
   sourceEnv: string;
   targetEnv: string;
@@ -121,7 +126,7 @@ export interface CloneSsmNamespaceOptions {
  * "pr-123" pre-populated from "dev"'s values. Idempotent (Overwrite: true).
  */
 export async function cloneSsmNamespace(options: CloneSsmNamespaceOptions): Promise<string[]> {
-  const client = new SSMClient({ region: resolveRegion(options.region) });
+  const client = new SSMClient({ region: resolveRegion(options.region), ...awsClientDefaults(options.aws) });
   const sourceParams = await listParametersUnderPath(
     client,
     `/${options.namespace}/${options.sourceEnv}/`,
@@ -144,6 +149,8 @@ export async function cloneSsmNamespace(options: CloneSsmNamespaceOptions): Prom
 }
 
 export interface DeleteSsmNamespaceOptions {
+  /** Timeout and retry settings for the SSM client. */
+  aws?: AwsClientSettings;
   namespace: string;
   env: string;
   region?: string;
@@ -161,7 +168,7 @@ export interface DeleteSsmNamespaceOptions {
  * a teardown pipeline that deletes and moves on (the normal case) is fine.
  */
 export async function deleteSsmNamespace(options: DeleteSsmNamespaceOptions): Promise<string[]> {
-  const client = new SSMClient({ region: resolveRegion(options.region) });
+  const client = new SSMClient({ region: resolveRegion(options.region), ...awsClientDefaults(options.aws) });
   const path = `/${options.namespace}/${options.env}/`;
   const params = await listParametersUnderPath(client, path);
   if (params.length === 0) return [];

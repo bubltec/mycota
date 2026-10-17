@@ -1,3 +1,4 @@
+import { hardenOAuth2 } from './oauth-http.js';
 import { Inject, Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, type Profile } from 'passport-github2';
@@ -18,6 +19,7 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
       callbackURL: config.github?.callbackUrl ?? 'http://localhost:3001/api/auth/github/callback',
       scope: ['read:user', 'user:email'],
     });
+    hardenOAuth2(this, config.network?.oauth);
   }
 
   validate(_accessToken: string, _refreshToken: string, profile: Profile): OAuthProfile {

@@ -1,3 +1,4 @@
+import { hardenOAuth2 } from './oauth-http.js';
 import { Inject, Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-microsoft';
@@ -26,6 +27,7 @@ export class MicrosoftStrategy extends PassportStrategy(Strategy, 'microsoft') {
       tenant: microsoft.tenant ?? 'common',
       scope: ['user.read'],
     });
+    hardenOAuth2(this, config.network?.oauth);
   }
 
   validate(_accessToken: string, _refreshToken: string, profile: MicrosoftProfile): OAuthProfile {

@@ -1,9 +1,11 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import ky from 'ky';
 import { MYCOTA_AUTH_CONFIG, type MycotaAuthConfig } from './auth.config.js';
 
 const SEARCH_ENDPOINT = 'https://api.search.brave.com/res/v1/web/search';
 const RESULT_COUNT = 5;
 const FETCH_TIMEOUT_MS = 5000;
+const FETCH_TOTAL_TIMEOUT_MS = 15_000;
 
 export interface SearchResultSummary {
   title: string;
@@ -46,15 +48,16 @@ export class SearchHistoryService {
     url.searchParams.set('q', domain);
     url.searchParams.set('count', String(RESULT_COUNT));
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
     try {
-      const res = await fetch(url, {
-        headers: { Accept: 'application/json', 'X-Subscription-Token': apiKey },
-        signal: controller.signal,
-      });
-      if (!res.ok) throw new Error(`search API returned ${res.status}`);
-      const body = (await res.json()) as BraveSearchResponse;
+      // ky retries a GET on network errors, timeouts and 408/429/5xx, and throws on other non-2xx.
+      const body = await ky
+        .get(url, {
+          headers: { Accept: 'application/json', 'X-Subscription-Token': apiKey },
+          timeout: FETCH_TIMEOUT_MS,
+          totalTimeout: FETCH_TOTAL_TIMEOUT_MS,
+          retry: { limit: 2, jitter: true, retryOnTimeout: true, maxRetryAfter: 5_000 },
+        })
+        .json<BraveSearchResponse>();
       return (body.web?.results ?? [])
         .filter((item): item is { title: string; description?: string; url: string } =>
           Boolean(item.title && item.url),
@@ -65,8 +68,6 @@ export class SearchHistoryService {
         `Search history lookup failed for ${domain}: ${err instanceof Error ? err.message : String(err)}`,
       );
       return null;
-    } finally {
-      clearTimeout(timeout);
     }
   }
 }

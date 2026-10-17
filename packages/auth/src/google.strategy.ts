@@ -1,3 +1,4 @@
+import { hardenOAuth2 } from './oauth-http.js';
 import { Inject, Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, type Profile } from 'passport-google-oauth20';
@@ -18,6 +19,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       callbackURL: config.google?.callbackUrl ?? 'http://localhost:3001/api/auth/google/callback',
       scope: ['profile', 'email'],
     });
+    hardenOAuth2(this, config.network?.oauth);
   }
 
   validate(_accessToken: string, _refreshToken: string, profile: Profile): OAuthProfile {

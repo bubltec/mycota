@@ -30,3 +30,4 @@ export {
   type StripeAccount,
   type StripeConnectClient,
 } from './stripe.connect.js';
+export { stripeClientOptions, type StripeClientSettings } from './stripe-client-options.js';

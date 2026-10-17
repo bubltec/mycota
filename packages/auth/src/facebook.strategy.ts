@@ -1,3 +1,4 @@
+import { hardenOAuth2 } from './oauth-http.js';
 import { Inject, Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, type Profile } from 'passport-facebook';
@@ -18,6 +19,7 @@ export class FacebookStrategy extends PassportStrategy(Strategy, 'facebook') {
       profileFields: ['id', 'displayName', 'photos', 'emails'],
       scope: ['public_profile', 'email'],
     });
+    hardenOAuth2(this, config.network?.oauth);
   }
 
   validate(_accessToken: string, _refreshToken: string, profile: Profile): OAuthProfile {

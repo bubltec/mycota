@@ -1,3 +1,4 @@
+import { awsClientDefaults } from './aws-client-defaults.js';
 import { Inject, Injectable } from '@nestjs/common';
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
 import { SesMailer, type Mailer, type SesClient, type SesMailerOptions } from '@bubltec/mycota-mail';
@@ -37,7 +38,7 @@ export class EmailSenderService {
   private readonly mailer: Mailer;
 
   constructor(@Inject(MYCOTA_AUTH_CONFIG) config: MycotaAuthConfig) {
-    const client = new SESClient({ region: config.awsRegion ?? 'us-east-1' });
+    const client = new SESClient({ region: config.awsRegion ?? 'us-east-1', ...awsClientDefaults(config.network?.aws) });
     this.mailer = new SesMailer(sesClientFromSdk(client), sesMailerOptionsFromAuth(config));
   }
 

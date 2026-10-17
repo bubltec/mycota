@@ -1,3 +1,4 @@
+import { createDefaultFetch } from './http.js';
 import { PLATFORM_CAPABILITIES } from './capabilities.js';
 import type {
   FetchLike,
@@ -26,7 +27,7 @@ export class XSocialPublisher implements SocialPublisher {
   private readonly baseUrl: string;
 
   constructor(private readonly options: XPublisherOptions) {
-    this.fetch = options.fetch ?? globalThis.fetch.bind(globalThis);
+    this.fetch = options.fetch ?? createDefaultFetch();
     this.baseUrl = options.baseUrl ?? 'https://api.x.com/2';
   }
 

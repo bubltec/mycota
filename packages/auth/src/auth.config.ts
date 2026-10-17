@@ -1,9 +1,27 @@
+import type { AwsClientSettings } from './aws-client-defaults.js';
+
 /**
  * Everything mycota's auth module needs from the consuming app — the whole
  * point is that mycota itself never reads process.env directly, so a second
  * site configures its own values instead of inheriting btfp's. See
  * apps/bff/src/mycota-config.ts for where these are actually read from env.
  */
+/** Timeout and retry knobs for every outbound call the auth module makes. All optional. */
+export interface MycotaNetworkConfig {
+  /** Applies to the SES and Bedrock clients. */
+  aws?: AwsClientSettings & {
+    /** Overrides `requestTimeoutMs` for Bedrock only, since model calls are slower. Default 30000. */
+    bedrockRequestTimeoutMs?: number;
+  };
+  /** Applies to the GitHub, Google, Facebook and Microsoft OAuth token and profile calls. */
+  oauth?: {
+    /** Per-request timeout. Default 10000. */
+    timeoutMs?: number;
+    /** Retries for the profile GET only; the single-use code exchange is never retried. Default 2. */
+    retries?: number;
+  };
+}
+
 export interface MycotaAuthConfig {
   jwtSecret: string;
   webOrigin: string;
@@ -35,6 +53,8 @@ export interface MycotaAuthConfig {
   anonymousEmail?: { pepper: string };
   /** Shown in OTP messages, e.g. "grtzplz". Defaults to a generic message. */
   appName?: string;
+  /** Timeouts and retries for outbound calls; see {@link MycotaNetworkConfig}. */
+  network?: MycotaNetworkConfig;
 }
 
 export const MYCOTA_AUTH_CONFIG = Symbol('MYCOTA_AUTH_CONFIG');
