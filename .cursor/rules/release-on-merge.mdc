@@ -48,8 +48,11 @@ To cut a **major** release, put `#major` (or use `feat!:`) in the PR title, for 
   option the consumer sets). Name this decision in the PR description.
 - `version` in every `package.json` is a permanent `0.0.0` placeholder. CI computes
   the real version from git tags, so never bump it by hand.
-- If `origin/main` moved, a newer version likely already exists on npm. Check with
-  `npm view @bubltec/mycota-auth dist-tags`.
+- **Check the current version against the origin before choosing a bump or quoting a
+  version scheme**, every time, not only when `origin/main` moved: `git fetch origin --tags`,
+  `git tag --sort=-v:refname | head -3`, and `npm view @bubltec/mycota-auth dist-tags`.
+  Local files, memory and this rule file can be stale (`version` is a `0.0.0` placeholder and
+  the rule itself once described 0.x after the packages reached 1.3).
 - Consumers pull releases with an exact version pin (btfp does this through
   `scripts/mycota-pull.sh`), so a bad release reaches them only when they choose to
   update.
