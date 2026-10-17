@@ -55,7 +55,7 @@ Every package is one of three kinds. Decide which before writing code.
 
 ### NestJS packages
 
-`auth`, `dynamo`, `professional-verification`.
+`auth`, `cms`, `dynamo`, `mcp`, `oauth`, `professional-verification`.
 
 *   Expose a module (`MycotaAuthModule.forRootAsync({ useFactory })`), services, guards and decorators. Configuration is injected; the package reads no `process.env`.
 *   The framework is a **peer dependency** (section 3).
@@ -72,7 +72,7 @@ Every package is one of three kinds. Decide which before writing code.
 
 ### Dependency direction
 
-Internal dependencies flow one way and never form a cycle: `auth` → `config`, `dynamo`, `mail`; `professional-verification` → `auth`; `cdk` → `config`. Everything else is a leaf. Keep leaves free of internal dependencies. Use `workspace:*`; it is published as the exact lockstep version.
+Internal dependencies flow one way and never form a cycle: `auth` → `config`, `dynamo`, `mail`; `professional-verification` → `auth`; `oauth` → `auth`, `dynamo`; `mcp` → `auth`, `oauth`; `cms` → `auth`, `dynamo`, `mcp`; `cdk` → `config`. Everything else is a leaf. Keep leaves free of internal dependencies. Use `workspace:*`; it is published as the exact lockstep version.
 
 ## 3. Dependency Policy
 
