@@ -44,6 +44,11 @@ export interface CreateCheckoutInput {
   shippingRates?: ShippingRate[];
   /** Ask the buyer for a phone number (for pickup, say). */
   collectPhone?: boolean;
+  /**
+   * How long the checkout page stays open, in minutes, from 30 to 1440 (Stripe's limits). The provider's default is 24 hours, which is far too
+   * long for an app that holds stock for a buyer while they pay: when this passes with no payment, the provider reports the checkout as expired.
+   */
+  expiresInMinutes?: number;
 }
 
 export interface CheckoutSession {

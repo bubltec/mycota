@@ -15,6 +15,34 @@ function client(over: { event?: () => StripeWebhookEvent } = {}) {
 const gateway = (c: ReturnType<typeof client>, extra: { connectWebhookSecret?: string } = {}) =>
   new StripePaymentGateway(c.stripe, { secretKey: 'sk', webhookSecret: 'whsec_platform', ...extra });
 
+describe('how long a checkout stays open', () => {
+  it('leaves the provider\'s default alone unless asked', async () => {
+    const c = client();
+    await gateway(c).createCheckout(base);
+    expect(c.create.mock.calls[0]![0]).not.toHaveProperty('expires_at');
+  });
+
+  it('expires the checkout that many minutes from now, in the epoch seconds Stripe wants', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-10-18T12:00:00.000Z'));
+    try {
+      const c = client();
+      await gateway(c).createCheckout({ ...base, expiresInMinutes: 30 });
+      expect(c.create.mock.calls[0]![0].expires_at).toBe(Math.floor(Date.parse('2026-10-18T12:30:00.000Z') / 1000));
+      await gateway(c).createCheckout({ ...base, expiresInMinutes: 1440 });
+      expect(c.create.mock.calls[1]![0].expires_at).toBe(Math.floor(Date.parse('2026-10-19T12:00:00.000Z') / 1000));
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('refuses a lifetime Stripe would reject, rather than quietly changing it', async () => {
+    for (const expiresInMinutes of [0, 29, 1441, 30.5, Number.NaN]) {
+      await expect(gateway(client()).createCheckout({ ...base, expiresInMinutes }), String(expiresInMinutes)).rejects.toThrow(/30 to 1440/);
+    }
+  });
+});
+
 describe('direct charges: the connected account is the seller of record', () => {
   it('makes the checkout on the connected account, with no transfer, and may take a fee', async () => {
     const c = client();
