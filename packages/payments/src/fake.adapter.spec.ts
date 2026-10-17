@@ -43,4 +43,29 @@ describe('FakePaymentGateway', () => {
       metadata: { orderId: 'ord_1' },
     });
   });
+
+  it('applies the same rules as the real adapter, so a misuse shows up in a test', async () => {
+    const gateway = new FakePaymentGateway();
+    const base = { successUrl: 'https://app.local/ok', cancelUrl: 'https://app.local/no', metadata: {}, lines: [{ name: 'Tee', quantity: 1, unitAmount: money(2500) }] };
+    await expect(gateway.createCheckout({ ...base, chargeMode: 'direct' })).rejects.toThrow(/connected account/);
+    await expect(gateway.createCheckout({ ...base, shippingRates: [{ name: 'Standard', amount: money(500) }] })).rejects.toThrow(/shippingAddress/);
+    await expect(gateway.createCheckout({ ...base, chargeMode: 'direct', connectedAccountId: 'acct_1', shippingAddress: { allowedCountries: ['US'] } })).resolves.toMatchObject({ id: expect.stringMatching(/^cs_fake_/) });
+  });
+
+  it('lets a test see what a checkout and a refund asked for', async () => {
+    const gateway = new FakePaymentGateway();
+    const input = { successUrl: 'https://app.local/ok', cancelUrl: 'https://app.local/no', metadata: { orderId: 'o1' }, connectedAccountId: 'acct_1', chargeMode: 'direct' as const, collectPhone: true, lines: [{ name: 'Tee', quantity: 1, unitAmount: money(2500) }] };
+    const session = await gateway.createCheckout(input);
+    expect(gateway.checkoutInput(session.id)).toEqual(input);
+    await gateway.refund({ paymentId: 'pi_1', connectedAccountId: 'acct_1' });
+    expect(gateway.refundsRequested()).toEqual([{ paymentId: 'pi_1', connectedAccountId: 'acct_1' }]);
+  });
+
+  it('passes the account, buyer and shipping details of a completed sale through a webhook', async () => {
+    const gateway = new FakePaymentGateway();
+    const details = { connectedAccountId: 'acct_1', customer: { email: 'bea@example.com' }, shipping: { name: 'Bea', address: { country: 'US' } } };
+    const event = await gateway.parseWebhook(JSON.stringify({ type: 'checkout.completed', paymentId: 'pi_1', amountCents: 2500, metadata: { orderId: 'o1' }, ...details }), '');
+    expect(event).toEqual({ type: 'checkout.completed', paymentId: 'pi_1', amount: money(2500), metadata: { orderId: 'o1' }, ...details });
+    expect(await gateway.parseWebhook(JSON.stringify({ type: 'checkout.completed', paymentId: 'pi_2', amountCents: 100 }), '')).toEqual({ type: 'checkout.completed', paymentId: 'pi_2', amount: money(100), metadata: {} });
+  });
 });
