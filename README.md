@@ -23,6 +23,22 @@ A pnpm + turbo monorepo (same shape as btfp itself), so each concern is its own 
 - **`packages/mail`** → `@bubltec/mycota-mail` — `Mailer` port, `FakeMailer` for local/tests, `SesMailer` over an injected SES-shaped client. Non-prod stages prefix subjects with `[stage]`. No AWS SDK dependency.
 - **`packages/sms`** → `@bubltec/mycota-sms` — `SmsSender` port, `FakeSmsSender` for local/tests, `SnsSmsSender` over an injected SNS-shaped client. Numbers are normalized to E.164. No AWS SDK dependency.
 
+## Timeouts and retries
+
+Every outbound call has a timeout and, where it is safe, a retry. Defaults work out of the box; the settings below tune them.
+
+| Calls | Default | Tune with |
+| --- | --- | --- |
+| Social, token-refresh `fetch` (`social`, `tokens`) | `ky`: 10s per attempt, 30s total, 2 retries with jitter on network errors, timeouts and 408/429/5xx. Only idempotent methods retry, so a POST (publishing a post, rotating a refresh token) never repeats. | Inject your own `fetch` to replace it. |
+| SES and Bedrock (`auth`) | 3 attempts, 3s connect, 10s request (Bedrock 30s) | `config.network.aws` (`maxAttempts`, `connectionTimeoutMs`, `requestTimeoutMs`, `bedrockRequestTimeoutMs`) |
+| SSM (`config`) | same as above | `aws` on `SsmConfigOptions`, `CloneSsmNamespaceOptions`, `DeleteSsmNamespaceOptions` |
+| DynamoDB (`dynamo`) | same as above | `DynamoModule.forRoot({ aws })` |
+| GitHub, Google, Facebook, Microsoft, Apple sign-in (`auth`) | 10s per request; the profile GET retries twice; the single-use code exchange never retries | `config.network.oauth` (`timeoutMs`, `retries`) |
+| Brave search, homepage fetch (`auth`) | 5s per attempt; search retries twice, homepage once | not configurable |
+| Stripe (`payments`) | none until the app opts in | `new Stripe(key, stripeClientOptions({ timeoutMs, maxNetworkRetries }))`; defaults 20s and 2 retries |
+
+The mail, SMS, media and jobs adapters take injected clients, so their timeouts are whatever the app configures on those clients.
+
 ## Sign-in methods (`@bubltec/mycota-auth`)
 
 | Method | Routes | Enabled by |

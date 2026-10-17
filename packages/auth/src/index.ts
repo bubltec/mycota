@@ -1,5 +1,6 @@
 export { MycotaAuthModule, type MycotaAuthModuleAsyncOptions } from './auth.module.js';
-export { MYCOTA_AUTH_CONFIG, type MycotaAuthConfig } from './auth.config.js';
+export { MYCOTA_AUTH_CONFIG, type MycotaAuthConfig, type MycotaNetworkConfig } from './auth.config.js';
+export type { AwsClientSettings } from './aws-client-defaults.js';
 export {
   buildMycotaAuthConfigFromSsm,
   type BuildMycotaAuthConfigFromSsmOptions,

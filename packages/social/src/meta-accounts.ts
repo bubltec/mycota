@@ -1,3 +1,4 @@
+import { createDefaultFetch } from './http.js';
 import type { FetchLike } from './ports.js';
 
 export interface MetaDestination {
@@ -23,7 +24,7 @@ export async function listMetaDestinations(input: {
   fetch?: FetchLike;
   graphBaseUrl?: string;
 }): Promise<MetaDestination[]> {
-  const fetchFn = input.fetch ?? globalThis.fetch.bind(globalThis);
+  const fetchFn = input.fetch ?? createDefaultFetch();
   const base = input.graphBaseUrl ?? 'https://graph.facebook.com/v22.0';
   const params = new URLSearchParams({
     fields: 'id,name,instagram_business_account{id,username,name}',

@@ -1,3 +1,4 @@
+import { awsClientDefaults } from './aws-client-defaults.js';
 import { DynamicModule, Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
@@ -98,7 +99,7 @@ export class MycotaAuthModule {
           useFactory: (config: MycotaAuthConfig) =>
             options.mailer?.(config) ??
             new SesMailer(
-              sesClientFromSdk(new SESClient({ region: config.awsRegion ?? 'us-east-1' })),
+              sesClientFromSdk(new SESClient({ region: config.awsRegion ?? 'us-east-1', ...awsClientDefaults(config.network?.aws) })),
               sesMailerOptionsFromAuth(config),
             ),
         },

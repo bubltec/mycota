@@ -3,10 +3,12 @@ import { promises as dns } from 'node:dns';
 import { isIP } from 'node:net';
 import * as http from 'node:http';
 import * as https from 'node:https';
+import { HttpStatusError, RequestTimeoutError, withTransientRetry } from './transient-retry.js';
 
 const FETCH_TIMEOUT_MS = 5000;
 const MAX_BYTES = 200_000;
 const MAX_REDIRECTS = 3;
+const FETCH_RETRIES = 1; // kept low: two candidate URLs are tried in sequence
 const MAX_TEXT_CHARS = 4000;
 const USER_AGENT = 'mycota-verification-bot/1.0';
 
@@ -102,7 +104,7 @@ function fetchOnce(urlStr: string, redirectsLeft: number): Promise<string> {
           }
           if (status !== 200) {
             res.resume();
-            reject(new Error(`unexpected status ${status}`));
+            reject(new HttpStatusError(status));
             return;
           }
 
@@ -121,7 +123,7 @@ function fetchOnce(urlStr: string, redirectsLeft: number): Promise<string> {
           res.on('error', reject);
         },
       );
-      req.on('timeout', () => req.destroy(new Error('request timed out')));
+      req.on('timeout', () => req.destroy(new RequestTimeoutError()));
       req.on('error', reject);
       req.end();
     });
@@ -142,7 +144,9 @@ export class HomepageFetcherService {
   async fetchHomepageText(domain: string): Promise<string | null> {
     for (const candidate of [`https://${domain}`, `https://www.${domain}`]) {
       try {
-        const html = await fetchOnce(candidate, MAX_REDIRECTS);
+        const html = await withTransientRetry(() => fetchOnce(candidate, MAX_REDIRECTS), {
+          retries: FETCH_RETRIES,
+        });
         const text = htmlToText(html);
         if (text.length > 0) return text.slice(0, MAX_TEXT_CHARS);
       } catch (err) {
