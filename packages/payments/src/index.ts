@@ -36,3 +36,10 @@ export {
   type StripeConnectClient,
 } from './stripe.connect.js';
 export { stripeClientOptions, type StripeClientSettings } from './stripe-client-options.js';
+export {
+  StripeConnectV2Onboarding,
+  toV2Account,
+  type StripeConnectV2Client,
+  type StripeConnectV2Options,
+  type StripeV2Account,
+} from './stripe.connect-v2.js';
