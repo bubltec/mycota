@@ -1,0 +1,60 @@
+{
+  "name": "@bubltec/mycota-oauth",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b --noEmit",
+    "lint": "oxlint -c ../../.oxlintrc.json src",
+    "test": "vitest run --exclude '**/dist/**'"
+  },
+  "dependencies": {
+    "@aws-sdk/lib-dynamodb": "3.1136.0",
+    "@bubltec/mycota-auth": "workspace:*",
+    "@bubltec/mycota-dynamo": "workspace:*"
+  },
+  "devDependencies": {
+    "@bubltec/mycota-mail": "workspace:*",
+    "@fastify/cookie": "11.1.2",
+    "@nestjs/common": "12.0.3",
+    "@nestjs/core": "12.0.3",
+    "@nestjs/jwt": "12.0.2",
+    "@nestjs/passport": "12.0.0",
+    "@nestjs/platform-fastify": "12.0.3",
+    "@nestjs/testing": "12.0.3",
+    "@types/node": "26.6.2",
+    "class-transformer": "0.5.1",
+    "class-validator": "0.15.1",
+    "fastify": "5.12.5",
+    "passport": "0.7.0",
+    "reflect-metadata": "0.2.2",
+    "rxjs": "7.8.2",
+    "typescript": "7.0.2",
+    "vitest": "5.0.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bubltec/mycota",
+    "directory": "packages/oauth"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^12.0.0",
+    "@nestjs/core": "^12.0.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.0"
+  }
+}
