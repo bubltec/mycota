@@ -48,6 +48,12 @@ export interface StripeV2Account {
 }
 
 export interface StripeConnectV2Options {
+  /**
+   * What the hosted form asks for. `upfront` (the default) collects everything Stripe will eventually need in one go: it avoids a seller later
+   * having payouts or payments paused over something they were never asked for, and shows risk early. `incremental` asks only for what is due
+   * now, so signing up is quicker and more is asked as the seller earns.
+   */
+  collect?: 'upfront' | 'incremental';
   /** Where a seller signs in to their own Stripe dashboard. Full-dashboard accounts have no login link to mint. Default `https://dashboard.stripe.com/login`. */
   dashboardUrl?: string;
 }
@@ -89,12 +95,14 @@ export function toV2Account(raw: StripeV2Account): ConnectAccount {
 export class StripeConnectV2Onboarding implements ConnectOnboarding {
   readonly provider = 'stripe';
   private readonly dashboardUrl: string;
+  private readonly fields: 'eventually_due' | 'currently_due';
 
   constructor(
     private readonly stripe: StripeConnectV2Client,
     options: StripeConnectV2Options = {},
   ) {
     this.dashboardUrl = options.dashboardUrl ?? 'https://dashboard.stripe.com/login';
+    this.fields = options.collect === 'incremental' ? 'currently_due' : 'eventually_due';
   }
 
   async createExpressAccount(input: CreateExpressAccountInput): Promise<ConnectAccount> {
@@ -116,7 +124,7 @@ export class StripeConnectV2Onboarding implements ConnectOnboarding {
       use_case: {
         type: 'account_onboarding',
         // No `configurations`: Stripe rejects it as an unknown field, and the link collects what the account's own configuration (merchant) needs.
-        account_onboarding: { refresh_url: input.refreshUrl, return_url: input.returnUrl },
+        account_onboarding: { refresh_url: input.refreshUrl, return_url: input.returnUrl, collection_options: { fields: this.fields } },
       },
     });
     return { url: link.url };

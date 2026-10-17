@@ -102,8 +102,14 @@ describe('StripeConnectV2Onboarding', () => {
     expect(link.url).toContain('connect.stripe.com');
     expect(stripe.v2.core.accountLinks.create).toHaveBeenCalledWith({
       account: 'acct_v2',
-      use_case: { type: 'account_onboarding', account_onboarding: { refresh_url: 'https://app.test/refresh', return_url: 'https://app.test/return' } }, // `configurations` is rejected by Stripe as an unknown field
+      use_case: { type: 'account_onboarding', account_onboarding: { refresh_url: 'https://app.test/refresh', return_url: 'https://app.test/return', collection_options: { fields: 'eventually_due' } } }, // no `configurations`: Stripe rejects it as an unknown field
     });
+  });
+
+  it('asks only for what is due now when told to collect incrementally', async () => {
+    const stripe = client();
+    await new StripeConnectV2Onboarding(stripe, { collect: 'incremental' }).createOnboardingLink({ accountId: 'acct_v2', refreshUrl: 'https://app.test/refresh', returnUrl: 'https://app.test/return' });
+    expect(stripe.v2.core.accountLinks.create.mock.calls[0]![0]).toMatchObject({ use_case: { account_onboarding: { collection_options: { fields: 'currently_due' } } } });
   });
 
   it('reads an account back with its capabilities and requirements', async () => {
