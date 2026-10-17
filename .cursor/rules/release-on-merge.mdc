@@ -32,17 +32,27 @@ body, including inside pasted commit messages, also triggers a major release. Do
 write those tokens in commit or PR bodies unless you mean them.
 
 To cut a **major** release, put `#major` (or use `feat!:`) in the PR title, for example
-`feat!: upgrade to NestJS 12 #major`. From 0.6.0 that produces 1.0.0.
+`feat!: upgrade to NestJS 12 #major`. From 1.3.0 that produces 2.0.0.
 
 ## What this means when working here
 
 - **Never push to `main` or merge a PR without the user's explicit go-ahead.**
-- Pick the bump deliberately. Under the 0.x scheme, breaking changes are normally
-  a minor bump. Use `#major` or `feat!:` only if a 1.0.0 is intended.
+- Pick the bump deliberately. The packages are past 1.0, so standard semver applies: a
+  breaking change is a major bump (`feat!:` or `#major` in the PR title).
+- **Decide whether the change is breaking before choosing the prefix.** Unchanged
+  signatures are not enough. Count it as breaking if an existing consumer can upgrade with
+  no code change and see different behaviour. That includes new default timeouts, retry
+  policies or size limits, changed error types or messages, a new required peer dependency
+  or setting, a stricter validation rule, and a raised `engines` floor. Either ship it
+  breaking, or keep the old behaviour as the default and make the new one opt-in (an
+  option the consumer sets). Name this decision in the PR description.
 - `version` in every `package.json` is a permanent `0.0.0` placeholder. CI computes
   the real version from git tags, so never bump it by hand.
-- If `origin/main` moved, a newer version likely already exists on npm. Check with
-  `npm view @bubltec/mycota-auth dist-tags`.
+- **Check the current version against the origin before choosing a bump or quoting a
+  version scheme**, every time, not only when `origin/main` moved: `git fetch origin --tags`,
+  `git tag --sort=-v:refname | head -3`, and `npm view @bubltec/mycota-auth dist-tags`.
+  Local files, memory and this rule file can be stale (`version` is a `0.0.0` placeholder and
+  the rule itself once described 0.x after the packages reached 1.3).
 - Consumers pull releases with an exact version pin (btfp does this through
   `scripts/mycota-pull.sh`), so a bad release reaches them only when they choose to
   update.
