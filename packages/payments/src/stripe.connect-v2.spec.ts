@@ -41,6 +41,10 @@ describe('toV2Account', () => {
     expect(a).toMatchObject({ status: 'restricted', detailsSubmitted: false });
   });
 
+  it('is restricted when Stripe has rejected the card-payments capability', () => {
+    expect(toV2Account(account({ card: 'rejected', requirements: { entries: [] } }))).toMatchObject({ status: 'restricted', chargesEnabled: false });
+  });
+
   it('is not complete if payments are active but something has become due again', () => {
     expect(toV2Account(account({ card: 'active', requirements: { entries: [entry('past_due')] } }))).toMatchObject({ status: 'pending', chargesEnabled: true, detailsSubmitted: false });
   });
