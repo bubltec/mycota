@@ -22,6 +22,7 @@ export class MycotaOAuthModule {
   static forRootAsync(options: MycotaOAuthModuleAsyncOptions): DynamicModule {
     return {
       module: MycotaOAuthModule,
+      global: true,
       imports: options.imports ?? [],
       controllers: [OAuthController],
       providers: [
