@@ -103,6 +103,9 @@ export class StripePaymentGateway implements PaymentGateway {
     if (input.collectPhone) {
       params.phone_number_collection = { enabled: true };
     }
+    if (input.expiresInMinutes !== undefined) {
+      params.expires_at = Math.floor(Date.now() / 1000) + checkoutLifetimeMinutes(input.expiresInMinutes) * 60;
+    }
 
     const direct = input.chargeMode === 'direct' && input.connectedAccountId;
     if (input.connectedAccountId) {
@@ -228,4 +231,12 @@ function toShipping(session: Record<string, unknown>): ShippingDetails | undefin
   const raw = (collected?.shipping_details ?? session.shipping_details) as { name?: unknown; address?: unknown } | undefined;
   if (!raw?.address) return undefined;
   return { ...(text(raw.name) ? { name: text(raw.name)! } : {}), address: toAddress(raw.address) };
+}
+
+/** Stripe accepts a checkout lifetime from 30 minutes to 24 hours. Asking for anything else is a mistake worth failing on, not silently clamping. */
+export function checkoutLifetimeMinutes(minutes: number): number {
+  if (!Number.isInteger(minutes) || minutes < 30 || minutes > 1440) {
+    throw new Error('expiresInMinutes must be a whole number of minutes from 30 to 1440');
+  }
+  return minutes;
 }

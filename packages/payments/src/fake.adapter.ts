@@ -1,4 +1,5 @@
 import { addMoney, money, type Money } from './money.js';
+import { checkoutLifetimeMinutes } from './stripe.adapter.js';
 import type {
   CheckoutSession,
   CreateCheckoutInput,
@@ -38,6 +39,7 @@ export class FakePaymentGateway implements PaymentGateway {
     if (input.shippingRates?.length && !input.shippingAddress) {
       throw new Error('shipping rates need shippingAddress: a buyer cannot pick a rate without giving an address');
     }
+    if (input.expiresInMinutes !== undefined) checkoutLifetimeMinutes(input.expiresInMinutes);
     this.seq += 1;
     const id = `cs_fake_${this.seq}`;
     this.sessions.set(id, input);

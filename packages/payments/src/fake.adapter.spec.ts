@@ -69,3 +69,12 @@ describe('FakePaymentGateway', () => {
     expect(await gateway.parseWebhook(JSON.stringify({ type: 'checkout.completed', paymentId: 'pi_2', amountCents: 100 }), '')).toEqual({ type: 'checkout.completed', paymentId: 'pi_2', amount: money(100), metadata: {} });
   });
 });
+
+describe('FakePaymentGateway checkout lifetime', () => {
+  it('holds the fake to the same limits as Stripe, so a misuse is caught in tests', async () => {
+    const gw = new FakePaymentGateway();
+    const base = { successUrl: 'https://x/ok', cancelUrl: 'https://x/no', metadata: {}, lines: [{ name: 'Tee', quantity: 1, unitAmount: money(100) }] };
+    await expect(gw.createCheckout({ ...base, expiresInMinutes: 10 })).rejects.toThrow(/30 to 1440/);
+    await expect(gw.createCheckout({ ...base, expiresInMinutes: 30 })).resolves.toMatchObject({ id: expect.any(String) });
+  });
+});
