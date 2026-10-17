@@ -25,7 +25,7 @@ export interface StripeConnectV2Client {
   };
 }
 
-type CapabilityStatus = 'active' | 'pending' | 'restricted' | 'unsupported';
+type CapabilityStatus = 'active' | 'pending' | 'rejected' | 'restricted' | 'unsupported';
 
 /** The parts of a v2 account this adapter reads. Everything is optional: a field Stripe does not return is "not yet". */
 export interface StripeV2Account {
@@ -61,8 +61,9 @@ const INCLUDE = ['configuration.merchant', 'requirements'];
  *
  *  - `chargesEnabled` / `payoutsEnabled`: the card-payments and payout capabilities are `active`.
  *  - `detailsSubmitted`: nothing is left for the person to do now (no requirement awaiting them is currently or past due).
- *  - `restricted`: something they sent was not accepted (a requirement awaiting them carries an error). Anything else not finished is
- *    `pending`, including Stripe still verifying what they sent, which needs nothing from them.
+ *  - `restricted`: Stripe rejected the card-payments capability, or something they sent was not accepted (a requirement awaiting them
+ *    carries an error). Anything else not finished is `pending`, including Stripe still verifying what they sent, which needs nothing
+ *    from them.
  */
 export function toV2Account(raw: StripeV2Account): ConnectAccount {
   const merchant = raw.configuration?.merchant?.capabilities;
@@ -71,7 +72,7 @@ export function toV2Account(raw: StripeV2Account): ConnectAccount {
   const awaiting = (raw.requirements?.entries ?? []).filter((e) => e.awaiting_action_from === 'user');
   const due = awaiting.filter((e) => e.minimum_deadline?.status === 'currently_due' || e.minimum_deadline?.status === 'past_due');
   const detailsSubmitted = due.length === 0;
-  const rejected = awaiting.some((e) => (e.errors?.length ?? 0) > 0);
+  const rejected = merchant?.card_payments?.status === 'rejected' || awaiting.some((e) => (e.errors?.length ?? 0) > 0);
   const status: ConnectAccountStatus = chargesEnabled && detailsSubmitted ? 'complete' : rejected ? 'restricted' : 'pending';
   return { id: raw.id, status, chargesEnabled, payoutsEnabled, detailsSubmitted };
 }

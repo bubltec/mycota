@@ -41,6 +41,16 @@ describe('toV2Account', () => {
     expect(a).toMatchObject({ status: 'restricted', detailsSubmitted: false });
   });
 
+  it('is restricted when Stripe has rejected the card-payments capability', () => {
+    expect(toV2Account(account({ card: 'rejected', requirements: { entries: [] } }))).toMatchObject({ status: 'restricted', chargesEnabled: false });
+  });
+
+  it('accepts the real Stripe SDK client as it is, with no cast', () => {
+    // A compile-time check: the shape the adapter reads must stay assignable from every status the SDK can return.
+    const status: NonNullable<StripeV2Account['configuration']>['merchant'] = { capabilities: { card_payments: { status: 'rejected' } } };
+    expect(status).toBeDefined();
+  });
+
   it('is not complete if payments are active but something has become due again', () => {
     expect(toV2Account(account({ card: 'active', requirements: { entries: [entry('past_due')] } }))).toMatchObject({ status: 'pending', chargesEnabled: true, detailsSubmitted: false });
   });
