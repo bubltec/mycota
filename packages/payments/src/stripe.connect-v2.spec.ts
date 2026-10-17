@@ -96,13 +96,13 @@ describe('StripeConnectV2Onboarding', () => {
     expect(params).not.toHaveProperty('metadata');
   });
 
-  it('links to Stripe\'s hosted onboarding for the merchant configuration, returning to the given pages', async () => {
+  it('links to Stripe\'s hosted onboarding, returning to the given pages', async () => {
     const stripe = client();
     const link = await new StripeConnectV2Onboarding(stripe).createOnboardingLink({ accountId: 'acct_v2', refreshUrl: 'https://app.test/refresh', returnUrl: 'https://app.test/return' });
     expect(link.url).toContain('connect.stripe.com');
     expect(stripe.v2.core.accountLinks.create).toHaveBeenCalledWith({
       account: 'acct_v2',
-      use_case: { type: 'account_onboarding', account_onboarding: { configurations: ['merchant'], refresh_url: 'https://app.test/refresh', return_url: 'https://app.test/return' } },
+      use_case: { type: 'account_onboarding', account_onboarding: { refresh_url: 'https://app.test/refresh', return_url: 'https://app.test/return' } }, // `configurations` is rejected by Stripe as an unknown field
     });
   });
 

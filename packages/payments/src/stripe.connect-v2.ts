@@ -115,7 +115,8 @@ export class StripeConnectV2Onboarding implements ConnectOnboarding {
       account: input.accountId,
       use_case: {
         type: 'account_onboarding',
-        account_onboarding: { configurations: ['merchant'], refresh_url: input.refreshUrl, return_url: input.returnUrl },
+        // No `configurations`: Stripe rejects it as an unknown field, and the link collects what the account's own configuration (merchant) needs.
+        account_onboarding: { refresh_url: input.refreshUrl, return_url: input.returnUrl },
       },
     });
     return { url: link.url };
